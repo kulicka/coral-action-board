@@ -1,0 +1,660 @@
+<title>Coral MSP Action Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell. Left rail = saved views, clients, teams. Main = view header, toolbar, summary strip, then the board (horizontal columns or grouped ledger). Dark only, by request. */
+:root{
+  color-scheme:dark;
+  --bg:#07080a; --rail:#0b0d10; --surface:#0f1114; --col:#0c0e11; --raised:#15181c; --pop:#181b20; --line:#22262c; --line-strong:#30353d;
+  --fg:#e9ebee; --muted:#8c939d; --faint:#5a6069; --accent:#a9c1ff;
+  --ok:#5ccf98; --warn:#f0b54a; --crit:#ff6b5f;
+  --t-incident:#ff6b5f; --t-bug:#e88bc8; --t-feature:#b69cff; --t-request:#7fa6ff; --t-question:#6fd3e6; --t-internal:#9aa3ad; --t-change:#d2b67c;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+/* rail */
+.rail{background:var(--rail);border-right:1px solid var(--line);padding:20px 12px 24px max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand .mark{width:22px;height:22px;border-radius:6px;background:radial-gradient(circle at 30% 30%,#c9d6ff,#4b5d8a 70%);flex:none}
+.brand b{font-weight:500;font-size:14px}
+.brand small{display:block;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+.rail h5{margin:0 0 6px;padding:0 8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.nav{display:grid;gap:1px}
+.nav button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:6px 8px;color:var(--muted);font-size:13px;cursor:pointer}
+.nav button:hover{background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--fg)}
+.nav button[aria-current="true"]{background:var(--raised);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.nav button svg{width:14px;height:14px;flex:none;opacity:.8}
+.nav .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.nav .n.hot{color:var(--warn)}
+.nav .dot{width:7px;height:7px;border-radius:2px;background:var(--faint);flex:none}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 8px 0;border-top:1px solid var(--line);font-size:12.5px}
+.me small{display:block;color:var(--faint);font-size:11px}
+
+/* main */
+main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.vh{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.vh h1{margin:0;font-weight:300;font-size:30px;letter-spacing:-.015em;line-height:1.1}
+.vh p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+.btn-new{display:inline-flex;align-items:center;gap:8px;background:var(--fg);color:#0b0c0e;border:0;border-radius:8px;padding:8px 14px;font-weight:500;font-size:13px;cursor:pointer}
+.btn-new svg{width:13px;height:13px}
+.btn-new:hover{background:#fff}
+
+.tb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0 10px;height:32px;min-width:0;flex:0 1 240px}
+.search svg{width:14px;height:14px;color:var(--faint);flex:none}
+.search input{background:none;border:0;color:var(--fg);font:inherit;font-size:13px;width:100%;min-width:0;outline:none}
+.search:focus-within{border-color:var(--line-strong)}
+.fbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12.5px;cursor:pointer;white-space:nowrap}
+.fbtn:hover{border-color:var(--line-strong);color:var(--fg)}
+.fbtn.on{color:var(--fg);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.fbtn .k{font-family:var(--mono);font-size:10.5px;color:var(--accent)}
+.fbtn svg{width:11px;height:11px}
+.sp{flex:1}
+.lbl{font-size:12px;color:var(--faint)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;height:32px}
+.seg button{font-size:12.5px;color:var(--muted);background:transparent;border:0;border-radius:6px;padding:0 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.seg button svg{width:13px;height:13px}
+.seg button[aria-pressed="true"]{background:var(--raised);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line-strong)}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chips:empty{display:none}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--fg);border-radius:999px;padding:2px 4px 2px 10px}
+.fchip span{color:var(--muted)}
+.fchip button{background:none;border:0;color:var(--muted);cursor:pointer;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;padding:0}
+.fchip button:hover{background:var(--raised);color:var(--fg)}
+.clear{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{display:flex;align-items:baseline;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer;text-align:left}
+.stat:hover{border-color:var(--line-strong)}
+.stat.on{border-color:var(--sc,var(--accent))}
+.stat b{font-family:var(--mono);font-weight:500;font-size:18px;color:var(--sc,var(--fg));font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* board columns */
+.cols{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.col{flex:0 0 288px;background:var(--col);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-width:0}
+.cols.detail .col{flex-basis:340px}
+.colh{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bottom:1px solid var(--line);min-height:50px}
+.colh .nm{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.colh .sub{font-size:11px;color:var(--faint);white-space:nowrap}
+.colh .cnt{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--raised);border-radius:999px;padding:0 8px}
+.colh .flags{display:flex;gap:4px}
+.colh .flag{font-family:var(--mono);font-size:10.5px;padding:0 6px;border-radius:999px;color:var(--fc);background:color-mix(in srgb,var(--fc) 14%,transparent)}
+.colb{display:flex;flex-direction:column;gap:10px;padding:10px}
+.empty{font-size:12px;color:var(--faint);padding:14px 4px;text-align:center}
+
+/* atoms */
+.type{display:inline-flex;align-items:center;gap:6px;color:var(--tc);font-size:12px;font-weight:500;white-space:nowrap}
+.type svg{width:14px;height:14px;flex:none}
+.key{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.src{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line-strong);border-radius:4px;padding:0 5px;white-space:nowrap}
+.prio{display:inline-flex;align-items:flex-end;gap:2px;height:12px;color:var(--pc)}
+.prio i{width:3px;background:var(--line-strong);border-radius:1px}
+.prio i.on{background:currentColor}
+.prio i:nth-child(1){height:4px}.prio i:nth-child(2){height:7px}.prio i:nth-child(3){height:10px}.prio i:nth-child(4){height:12px}
+.prio-l{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--pc)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:9.5px;font-weight:600;color:#0b0c0e;background:var(--avc);flex:none}
+.av.lg{width:26px;height:26px;font-size:10.5px}
+.av.none{background:transparent;border:1.5px dashed var(--warn);color:var(--warn)}
+.who{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who.un span{color:var(--warn)}
+.sla{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--sc);background:color-mix(in srgb,var(--sc) 12%,transparent);border:1px solid color-mix(in srgb,var(--sc) 35%,transparent);padding:1px 8px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sla svg{width:11px;height:11px}
+.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--sc)}
+.chip{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 7px;white-space:nowrap}
+.btn{font-size:12px;background:var(--raised);border:1px solid var(--line-strong);border-radius:6px;padding:3px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{border-color:var(--muted)}
+.btn svg{width:10px;height:10px}
+.link{font-family:var(--mono);font-size:11px;color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;display:grid;gap:9px;padding:12px 12px 9px}
+.card.alert{border-color:color-mix(in srgb,var(--crit) 45%,var(--line))}
+.card.unassigned{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.card.fresh{box-shadow:0 0 0 1px var(--accent)}
+.card.short{cursor:pointer}
+.card.short.open{cursor:default}
+.card:hover{border-color:var(--line-strong)}
+.card .top{display:flex;align-items:center;gap:8px}
+.card .top .src{margin-left:auto}
+.card h3{margin:0;font-size:13.5px;font-weight:500;line-height:1.35}
+.card.short:not(.open) h3{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .ctx{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .ctx b{color:var(--fg);font-weight:500}
+.card .foot{display:flex;align-items:center;gap:10px}
+.card .foot .who{flex:1 1 auto}
+.card .slarow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.unfold{font-size:11px;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
+.unfold svg{width:11px;height:11px;transition:transform .15s}
+.unfold[aria-expanded="true"] svg{transform:rotate(180deg)}
+
+.detail{display:grid;gap:12px}
+.card.short .detail{border-top:1px solid var(--line);padding-top:12px}
+.stages{display:grid;gap:5px}
+.stages .bar{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.stages .bar i{height:4px;border-radius:2px;background:var(--line)}
+.stages .bar i.done{background:var(--faint)}
+.stages .bar i.cur{background:var(--accent)}
+.stages .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.stages .lab b{color:var(--fg);font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px;margin:0}
+.kv dt{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.kv dd{margin:0;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.slabox{display:grid;gap:6px;padding:9px 11px;border-radius:8px;background:var(--raised)}
+.slabox .l{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.last{font-size:11.5px;color:var(--muted)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+
+/* ledger */
+.lwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ledger{min-width:1120px}
+.r{display:grid;grid-template-columns:16px 26px 124px 78px minmax(220px,1fr) 128px 196px 108px 210px;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
+.r:hover{background:color-mix(in srgb,var(--fg) 3%,transparent)}
+.r.hd{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);cursor:default;border-top:0}
+.r.hd:hover{background:none}
+.r .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r .c{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.r.flag{background:color-mix(in srgb,var(--crit) 6%,transparent)}
+.r .chev{color:var(--faint);display:grid;place-items:center}
+.r .chev svg{width:11px;height:11px;transition:transform .15s}
+.r[aria-expanded="true"] .chev svg{transform:rotate(90deg)}
+.gh{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;border-top:1px solid var(--line-strong);background:var(--col);font-size:13px;font-weight:500}
+.gh:first-of-type{border-top:0}
+.gh .cnt{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+.rx{padding:6px 14px 16px 58px;background:color-mix(in srgb,var(--fg) 2%,transparent);border-top:1px solid var(--line)}
+.rx .detail{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:28px;max-width:900px}
+.rx .detail .stages,.rx .detail .acts,.rx .detail .last{grid-column:1/-1}
+
+/* popover, drawer, toast */
+.pop{position:fixed;z-index:50;background:var(--pop);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.55);min-width:220px;max-width:300px;max-height:min(420px,70vh);overflow-y:auto;padding:6px}
+.pop h6{margin:6px 8px 4px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:6px 8px;font-size:12.5px;cursor:pointer;color:var(--fg)}
+.opt:hover{background:var(--raised)}
+.opt .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.opt .box{width:14px;height:14px;border:1px solid var(--line-strong);border-radius:4px;display:grid;place-items:center;flex:none}
+.opt[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent)}
+.opt[aria-checked="true"] .box::after{content:"";width:7px;height:4px;border:solid #0b0c0e;border-width:0 0 1.6px 1.6px;transform:rotate(-45deg) translate(1px,-1px)}
+.opt.sel{color:var(--accent)}
+.opt small{color:var(--faint);font-size:11px}
+.load{display:inline-flex;gap:2px;margin-left:auto}
+.load i{width:5px;height:10px;border-radius:1px;background:var(--line-strong)}
+.load i.on{background:var(--muted)}
+.load i.on.hi{background:var(--warn)}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line-strong);z-index:61;display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) 22px;gap:16px;overflow-y:auto}
+.drawer h2{margin:0;font-weight:400;font-size:20px}
+.drawer p{margin:0;color:var(--muted);font-size:12.5px}
+.field{display:grid;gap:6px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;color:var(--fg);font:inherit;font-size:13px;padding:8px 10px;width:100%}
+.field textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.typepick{display:flex;flex-wrap:wrap;gap:6px}
+.typepick button{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;padding:5px 9px;cursor:pointer}
+.typepick button[aria-pressed="true"]{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 10%,transparent)}
+.dfoot{margin-top:auto;display:flex;gap:8px;justify-content:flex-end;padding-top:8px}
+.ghost{background:none;border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px}
+.err{color:var(--crit);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#0b0c0e;border-radius:8px;padding:8px 14px;font-size:13px;z-index:70;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.proto{font-size:11.5px;color:var(--faint)}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));gap:12px}
+  .rail .sec-c,.rail .sec-t,.me{display:none}
+  .nav.views{display:flex;gap:4px;overflow-x:auto}
+  .nav.views button{width:auto;white-space:nowrap;flex:none}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .search{flex:1 1 100%}
+  .col{flex-basis:84vw}
+}
+@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
+</style>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><div><b>Action Board</b><small>Coral MSP</small></div></div>
+    <div><h5>Views</h5><nav class="nav views" id="navViews"></nav></div>
+    <div class="sec-c"><h5>Clients</h5><nav class="nav" id="navClients"></nav></div>
+    <div class="sec-t"><h5>Teams</h5><nav class="nav" id="navTeams"></nav></div>
+    <div class="me"><span class="av lg" style="--avc:#6fd3e6">JR</span><div>Jon Ruiz<small>Support L1 · viewing as</small></div></div>
+  </aside>
+
+  <main>
+    <div class="vh">
+      <div><h1 id="vTitle"></h1><p id="vDesc"></p></div>
+      <button class="btn-new" type="button" id="newBtn"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 1.5v9M1.5 6h9"/></svg>New task</button>
+    </div>
+
+    <div class="tb">
+      <label class="search"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.3"/><path d="m9.3 9.3 3.2 3.2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Search title, key or client" autocomplete="off"></label>
+      <div id="fbtns" style="display:contents"></div>
+      <span class="sp"></span>
+      <span class="lbl">Group</span><button class="fbtn" type="button" id="groupBtn"></button>
+      <span class="lbl">Sort</span><button class="fbtn" type="button" id="sortBtn"></button>
+      <div class="seg" role="group" aria-label="Card layout" id="seg">
+        <button type="button" data-v="detail" title="Detail cards"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5" height="11" rx="1"/><rect x="7.5" y="1.5" width="5" height="11" rx="1"/></svg>Detail</button>
+        <button type="button" data-v="short" title="Short cards"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="7.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="7.5" width="5" height="5" rx="1"/><rect x="7.5" y="7.5" width="5" height="5" rx="1"/></svg>Short</button>
+        <button type="button" data-v="ledger" title="Ledger rows"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 3h10M2 7h10M2 11h10"/></svg>Ledger</button>
+      </div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="stats" id="stats"></div>
+    <div id="board"></div>
+    <p class="proto">Prototype with sample data. Changes you make stay in this browser tab until you reload.</p>
+  </main>
+</div>
+<div class="pop" id="pop" hidden role="menu"></div>
+<div id="drawerWrap" hidden><div class="scrim" id="scrim"></div>
+  <form class="drawer" id="form" novalidate>
+    <div><h2>New task</h2><p>It lands in Triage. Leave the owner empty to put it in a team queue.</p></div>
+    <div class="field"><label for="fTitle">Title</label><input id="fTitle" placeholder="What needs to happen?" required></div>
+    <div class="field"><label>Type</label><div class="typepick" id="fType"></div></div>
+    <div class="two">
+      <div class="field"><label for="fClient">Client</label><select id="fClient"></select></div>
+      <div class="field"><label for="fPrio">Priority</label><select id="fPrio"><option value="1">P1 · Critical</option><option value="2">P2 · High</option><option value="3" selected>P3 · Normal</option><option value="4">P4 · Low</option></select></div>
+    </div>
+    <div class="field"><label for="fProject">Project</label><select id="fProject"></select></div>
+    <div class="two">
+      <div class="field"><label for="fOwner">Owner</label><select id="fOwner"></select></div>
+      <div class="field"><label for="fQueue">Queue if unassigned</label><select id="fQueue"></select></div>
+    </div>
+    <div class="field"><label for="fNotes">Notes</label><textarea id="fNotes" placeholder="Steps, links, who reported it"></textarea></div>
+    <p class="err" id="fErr" hidden>Add a title so people can find this task.</p>
+    <div class="dfoot"><button class="ghost" type="button" id="fCancel">Cancel</button><button class="btn-new" type="submit">Create task</button></div>
+  </form>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const G = {
+  incident:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 1.8 12.8 12H1.2z"/><path d="M7 5.5v3M7 10.2v.1"/></svg>',
+  bug:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5.3"/><circle cx="7" cy="7" r="1.9" fill="currentColor" stroke="none"/></svg>',
+  feature:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 1.3 12.7 7 7 12.7 1.3 7z"/></svg>',
+  request:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 8.2v3.5h10.4V8.2"/><path d="M7 1.8v6.4M4.5 5.8 7 8.2l2.5-2.4"/></svg>',
+  question:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.8 2.2h10.4v7.2H6.2L3.4 12V9.4H1.8z"/></svg>',
+  internal:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="10" height="10" rx="1.5"/></svg>',
+  change:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5h9.5L9.5 2.5M12 9.5H2.5l2 2"/></svg>',
+};
+const I = {
+  clock:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="4.8"/><path d="M6 3.4V6l1.8 1.2"/></svg>',
+  pause:'<svg viewBox="0 0 12 12" fill="currentColor"><rect x="3" y="2.5" width="2" height="7" rx=".5"/><rect x="7" y="2.5" width="2" height="7" rx=".5"/></svg>',
+  down:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5 6 7.5l3-3"/></svg>',
+  right:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3 7.5 6l-3 3"/></svg>',
+  x:'<svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="m3 3 6 6M9 3 3 9"/></svg>',
+  all:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2" width="3" height="10" rx="1"/><rect x="5.5" y="2" width="3" height="7" rx="1"/><rect x="9.5" y="2" width="3" height="9" rx="1"/></svg>',
+  alert:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3.5M7 9.6v.1" stroke-linecap="round"/></svg>',
+  me:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="5" r="2.5"/><path d="M2.5 12.5c.6-2.4 2.4-3.6 4.5-3.6s3.9 1.2 4.5 3.6"/></svg>',
+  support:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 8V7a4.5 4.5 0 0 1 9 0v1"/><rect x="1.8" y="7.5" width="2.4" height="3.5" rx="1"/><rect x="9.8" y="7.5" width="2.4" height="3.5" rx="1"/></svg>',
+  release:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M7 1.5 12 4v6l-5 2.5L2 10V4z"/><path d="M2 4l5 2.5L12 4M7 6.5v6"/></svg>',
+  people:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="5" r="2"/><circle cx="10" cy="5.5" r="1.6"/><path d="M1.5 12c.4-2 1.8-3 3.5-3s3.1 1 3.5 3M9 9.2c1.6-.2 3 .7 3.4 2.6"/></svg>',
+  globe:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="5.5"/><path d="M1.5 7h11M7 1.5c1.6 1.6 2.3 3.4 2.3 5.5S8.6 10.9 7 12.5C5.4 10.9 4.7 9.1 4.7 7S5.4 3.1 7 1.5z"/></svg>',
+};
+const TYPE = {incident:'Incident',bug:'Bug',feature:'Feature',request:'Request',question:'Question',internal:'Internal task',change:'Change request'};
+const PREFIX = {incident:'SUP',bug:'SUP',question:'SUP',request:'REQ',feature:'FR',internal:'INT',change:'CR'};
+const STAGES = ['Triage','Ready','In progress','In development','Verify','Done'];
+const SLAN = {breach:'Breached',risk:'At risk',ok:'On track',paused:'Paused',none:'No SLA'};
+const SLAORD = ['breach','risk','ok','paused','none'];
+const PC = {1:'var(--crit)',2:'var(--warn)',3:'var(--fg)',4:'var(--muted)'};
+const SC = {ok:'var(--ok)',risk:'var(--warn)',breach:'var(--crit)',paused:'var(--muted)',none:'var(--faint)'};
+const CLIENTS = ['Paramount','AMC','Netflix','NBCU','Fox','Coral Technology'];
+const PROJECTS = ['Coral MSP 4.12 release','Netflix onboarding','Fox SSO migration','Paramount reporting rollout','Product backlog'];
+const TEAMS = ['Support L1','Support L2','Development','Platform','QA','Product'];
+const PEOPLE = {
+  JR:{n:'Jon Ruiz',team:'Support L1',c:'#6fd3e6'}, HS:{n:'Hana Sato',team:'Support L1',c:'#7fa6ff'},
+  SO:{n:'Sam Okafor',team:'Support L2',c:'#e88bc8'}, AK:{n:'Ava Kowalski',team:'Support L2',c:'#f0a37a'},
+  MC:{n:'Maya Chen',team:'Development',c:'#a9c1ff'}, DA:{n:'Diego Alvarez',team:'Development',c:'#9be3b0'}, OH:{n:'Omar Haddad',team:'Development',c:'#d2b67c'},
+  PN:{n:'Priya Nair',team:'Platform',c:'#b69cff'}, LP:{n:'Lena Park',team:'QA',c:'#f3d27a'}, RB:{n:'Rosa Bianchi',team:'Product',c:'#c7c2ff'},
+};
+const ME = 'JR';
+
+// key, type, src, title, client, project, prio, owner, queue, [sla state, label, % used, kind, target], stage, link, last activity, tags
+const RAW = [
+ ['SUP-2381','incident','PORTAL',"Users can't sign in after SSO certificate rotation",'Paramount','',1,null,'Support L2',['risk','18m to first response',85,'First response','1h · Paramount contract, P1'],0,null,'Opened by client admin via portal · 42m ago',['SSO']],
+ ['SUP-2358','incident','EMAIL','Intermittent 502 errors on the AMC partner portal','AMC','',1,'OH','Development',['breach','Breached 40m ago',100,'Resolution','4h · standard, P1'],3,'Jira DEV-4421 · In progress','Omar is on a bridge call · 15m ago',['Availability']],
+ ['SUP-2384','incident','TEAMS','Asset ingest queue stalled for live sports feeds','Fox','',1,'AK','Support L2',['ok','2h 10m to resolve',35,'Resolution','4h · Fox contract, P1'],2,null,'Ava posted an update in Teams · 8m ago',['Ingest']],
+ ['SUP-2376','bug','EMAIL','Monthly invoice export totals are off by one cent','NBCU','Coral MSP 4.12 release',2,'MC','Development',['ok','1d 4h to resolve',30,'Resolution','3 business days · standard, P2'],3,'Jira DEV-4410 · In review','Maya commented in Jira · 22m ago',['Invoicing']],
+ ['SUP-2350','bug','EMAIL','Scheduled report emails are being sent twice','Fox','',2,'SO','Support L2',['breach','Breached 3h ago',100,'Resolution','2 business days · Fox contract, P2'],2,null,'No activity for 26h',['Escalation risk']],
+ ['SUP-2383','bug','PORTAL','Thumbnail generation fails for 4K uploads','Netflix','Netflix onboarding',2,null,'Development',['risk','3h to first response',78,'First response','4 business hours · standard, P2'],1,null,'Escalated from Support L1 · 1h ago',['Media']],
+ ['SUP-2372','bug','EMAIL','Export to Excel drops rows past 65,000','Netflix','',2,'DA','Development',['ok','20h to resolve',45,'Resolution','3 business days · standard, P2'],3,'Jira DEV-4417 · In progress','Diego pushed a fix branch · 1h ago',['Exports']],
+ ['SUP-2361','bug','EMAIL','Usage report double counts shared seats','Paramount','Paramount reporting rollout',2,'MC','Development',['paused','Paused · waiting on client',60,'Resolution','3 business days · Paramount contract, P2'],4,'Jira DEV-4409 · Ready for QA','Waiting for Paramount to confirm figures · 1d ago',['Reporting']],
+ ['SUP-2379','bug','PORTAL','Dashboard widgets show UTC instead of local time','AMC','',3,'HS','Support L1',['ok','2d to resolve',20,'Resolution','5 business days · standard, P3'],1,null,'Reproduced by Hana · 4h ago',['Reporting']],
+ ['REQ-311','request','EMAIL','Set up 40 user accounts for the new production team','Netflix','Netflix onboarding',3,null,'Support L1',['ok','6h to first response',25,'First response','8 business hours · standard, P3'],0,null,'Emailed by Netflix IT · 2h ago',['Accounts']],
+ ['REQ-309','request','PORTAL','Enable API access for a new integration partner','Paramount','Paramount reporting rollout',3,'HS','Support L1',['risk','1h 30m to resolve',80,'Resolution','2 business days · Paramount contract, P3'],2,null,'Waiting on security sign-off · 5h ago',['API']],
+ ['REQ-305','request','TEAMS',"Add NBCU's new subsidiary as a tenant",'NBCU','',3,'SO','Support L2',['ok','1d 2h to resolve',40,'Resolution','3 business days · standard, P3'],1,null,'Tenant form received · yesterday',['Tenants']],
+ ['SUP-2369','question','TEAMS','How do we export the audit log for a compliance review?','AMC','',3,'JR','Support L1',['paused','Paused · waiting on client',40,'Resolution','5 business days · standard, P3'],2,null,'Jon replied in Teams · yesterday',['Compliance']],
+ ['SUP-2366','question','EMAIL','Which IP ranges should Paramount allowlist?','Paramount','',4,'JR','Support L1',['ok','3d to resolve',15,'Resolution','5 business days · standard, P4'],2,null,'Jon drafted a reply · 6h ago',['Network']],
+ ['SUP-2385','question','PORTAL','Can we schedule exports to an SFTP folder?','Fox','',4,null,'Support L1',['ok','7h to first response',10,'First response','8 business hours · Fox contract, P4'],0,null,'Opened via portal · 30m ago',['Exports']],
+ ['CR-047','change','JIRA','Raise default session timeout from 30 to 60 minutes','NBCU','Coral MSP 4.12 release',3,'LP','QA',['ok','Due Nov 7',45,'Due date','Nov 7'],4,'Jira DEV-4398 · Ready for QA','Moved to Verify in Jira · 1h ago',['Config']],
+ ['CR-049','change','JIRA','Switch Fox SSO to the new identity provider','Fox','Fox SSO migration',2,'DA','Development',['ok','Due Nov 14',25,'Due date','Nov 14'],3,'Jira DEV-4402 · In progress','Diego updated in Jira · 4h ago',['SSO']],
+ ['CR-051','change','ADO','Rotate storage account keys for the EU region','Coral Technology','',2,'PN','Platform',['risk','Due today',90,'Due date','Oct 27'],2,'Azure DevOps #8840 · Active','Priya scheduled a window · 2h ago',['Security']],
+ ['FR-118','feature','PORTAL','Bulk user import from CSV','Coral Technology','Product backlog',3,null,'Product',['none','No SLA',0,'None',''],0,null,'Asked for by Netflix, Fox and AMC · 2d ago',['Requested by 3 clients']],
+ ['FR-121','feature','TEAMS','Saved filters on the content dashboard','NBCU','Product backlog',4,'RB','Product',['none','No SLA',0,'None',''],1,null,'Rosa added it to the Q1 shortlist · 3d ago',['Dashboards']],
+ ['FR-124','feature','EMAIL','Single sign-on for the mobile app','Coral Technology','Product backlog',3,null,'Product',['none','No SLA',0,'None',''],0,null,'Asked for by Paramount and NBCU · 5d ago',['Requested by 2 clients']],
+ ['INT-552','internal','ADO','Upgrade staging database to SQL Server 2022','Coral Technology','Coral MSP 4.12 release',2,'PN','Platform',['ok','Due Nov 3',55,'Due date','Nov 3'],2,'Azure DevOps #8812 · Active','Priya updated in Azure DevOps · 3h ago',['Release blocker']],
+ ['INT-560','internal','BOARD','Write release notes for Coral MSP 4.12','Coral Technology','Coral MSP 4.12 release',3,'RB','Product',['ok','Due Nov 6',30,'Due date','Nov 6'],1,null,'Created on the board · yesterday',['Release']],
+ ['INT-548','internal','ADO','Load test the new reporting API','Coral Technology','Paramount reporting rollout',3,'LP','QA',['ok','Due Nov 10',20,'Due date','Nov 10'],2,'Azure DevOps #8790 · Active','Lena logged results · 5h ago',['Performance']],
+];
+let tasks = RAW.map(r=>({key:r[0],type:r[1],src:r[2],title:r[3],client:r[4],project:r[5]||'No project',prio:r[6],owner:r[7],queue:r[8],
+  sla:{s:r[9][0],label:r[9][1],used:r[9][2],kind:r[9][3],target:r[9][4]},stage:r[10],link:r[11],last:r[12],tags:r[13]}));
+
+const teamOf = t => t.owner ? PEOPLE[t.owner].team : t.queue;
+const FIELDS = {
+  client:{label:'Client', get:t=>t.client, order:CLIENTS},
+  project:{label:'Project', get:t=>t.project, order:[...PROJECTS,'No project']},
+  team:{label:'Team', get:teamOf, order:TEAMS},
+  owner:{label:'Owner', get:t=>t.owner?PEOPLE[t.owner].n:'Unassigned'},
+  type:{label:'Type', get:t=>TYPE[t.type], order:Object.values(TYPE)},
+  prio:{label:'Priority', get:t=>'P'+t.prio, order:['P1','P2','P3','P4']},
+  sla:{label:'SLA', get:t=>SLAN[t.sla.s], order:SLAORD.map(s=>SLAN[s])},
+  stage:{label:'Stage', get:t=>STAGES[t.stage], order:STAGES.slice(0,5)},
+};
+const FILTER_KEYS = ['client','project','team','owner','type','prio','sla'];
+const GROUP_KEYS = ['stage','owner','client','project','team','prio','type','sla'];
+const SORTS = {urgency:'Most urgent first', prio:'Priority', client:'Client', key:'Newest key'};
+const QUICK = {
+  attention:{label:'Needs attention', fn:t=>!t.owner||t.sla.s==='risk'||t.sla.s==='breach'},
+  mine:{label:'Mine and my queue', fn:t=>t.owner===ME||(!t.owner&&t.queue===PEOPLE[ME].team)},
+};
+const VIEWS = {
+  all:{title:'All open work',desc:'Everything in flight across Coral MSP, by workflow stage.',icon:'all',group:'stage',layout:'short'},
+  attention:{title:'Needs attention',desc:'Unassigned, at risk or breached. Nothing here should sit for long.',icon:'alert',group:'sla',layout:'short',quick:'attention'},
+  mine:{title:'My queue',desc:'Your tasks, plus anything waiting in the Support L1 queue that you can take.',icon:'me',group:'stage',layout:'detail',quick:'mine'},
+  support:{title:'Support desk',desc:'Client tickets, grouped by who is accountable for each one.',icon:'support',group:'owner',layout:'short',filters:{type:['Incident','Bug','Request','Question']}},
+  release:{title:'Coral MSP 4.12 release',desc:'Release scope by stage, with links into Jira and Azure DevOps.',icon:'release',group:'stage',layout:'detail',filters:{project:['Coral MSP 4.12 release']}},
+  people:{title:"Who's on what",desc:'Every open task under its accountable owner, so load is easy to compare.',icon:'people',group:'owner',layout:'short'},
+  leadership:{title:'Company overview',desc:'One line per task, grouped by client, for leadership.',icon:'globe',group:'client',layout:'ledger'},
+};
+
+const S = {view:'all', layout:'short', group:'stage', sort:'urgency', q:'', quick:null, filters:{}, open:new Set(), fresh:null};
+
+function applyView(v){
+  const d = VIEWS[v] || VIEWS.all; S.view = VIEWS[v]?v:'all';
+  S.layout = d.layout; S.group = d.group; S.quick = d.quick||null; S.open.clear();
+  S.filters = {}; Object.entries(d.filters||{}).forEach(([k,vals])=>S.filters[k]=new Set(vals));
+  render();
+}
+function matches(t, f=S.filters, quick=S.quick, q=S.q){
+  if(quick && !QUICK[quick].fn(t)) return false;
+  for(const k of FILTER_KEYS){ const set=f[k]; if(set&&set.size&&!set.has(FIELDS[k].get(t))) return false; }
+  if(q){ const s=(t.title+' '+t.key+' '+t.client+' '+(t.owner?PEOPLE[t.owner].n:'')).toLowerCase(); if(!s.includes(q.toLowerCase())) return false; }
+  return true;
+}
+const visible = () => tasks.filter(t=>t.stage<5 && matches(t));
+const urgency = t => SLAORD.indexOf(t.sla.s)*10 + t.prio;
+function sorted(list){
+  const by = {urgency:(a,b)=>urgency(a)-urgency(b), prio:(a,b)=>a.prio-b.prio||urgency(a)-urgency(b),
+    client:(a,b)=>a.client.localeCompare(b.client)||urgency(a)-urgency(b), key:(a,b)=>b.key.localeCompare(a.key)};
+  return list.slice().sort(by[S.sort]);
+}
+
+/* atoms */
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const typeTag = (t,short) => `<span class="type" style="--tc:var(--t-${t})">${G[t]}${short?TYPE[t].split(' ')[0]:TYPE[t]}</span>`;
+const bars = p => [1,2,3,4].map(n=>`<i class="${n<=5-p?'on':''}"></i>`).join('');
+const prio = p => `<span class="prio-l" style="--pc:${PC[p]}" title="Priority ${p}"><span class="prio">${bars(p)}</span>P${p}</span>`;
+const av = (id,lg) => `<span class="av${lg?' lg':''}" style="--avc:${PEOPLE[id].c}">${id}</span>`;
+const who = t => t.owner
+  ? `<span class="who">${av(t.owner)}<span>${PEOPLE[t.owner].n}</span></span>`
+  : `<span class="who un"><span class="av none">?</span><span>Unassigned · ${t.queue}</span></span>`;
+const sla = s => `<span class="sla" style="--sc:${SC[s.s]}">${s.s==='paused'?I.pause:I.clock}${esc(s.label)}</span>`;
+const meter = s => s.s==='none'?'':`<div class="meter" style="--sc:${SC[s.s]}"><i style="width:${s.used}%"></i></div>`;
+const cardCls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner?' unassigned':'') + (S.fresh===t.key?' fresh':'');
+
+const detail = t => `<div class="detail">
+  <div class="stages"><div class="bar">${STAGES.map((s,i)=>`<i class="${i<t.stage?'done':i===t.stage?'cur':''}"></i>`).join('')}</div>
+    <div class="lab"><b>${STAGES[t.stage]}</b><span>${t.stage+1} of ${STAGES.length}</span></div></div>
+  <dl class="kv">
+    <dt>Client</dt><dd>${esc(t.client)}</dd>
+    <dt>Product</dt><dd>Coral MSP</dd>
+    <dt>Project</dt><dd>${esc(t.project)}</dd>
+    <dt>Owner</dt><dd>${who(t)}</dd>
+    ${t.link?`<dt>Linked</dt><dd><span class="link">↗ ${esc(t.link)}</span></dd>`:''}
+    ${t.tags.length?`<dt>Tags</dt><dd>${t.tags.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</dd>`:''}
+  </dl>
+  <div class="slabox"><div class="l"><span>${t.sla.kind==='None'?'No SLA applies':esc(t.sla.kind+' · '+t.sla.target)}</span>${sla(t.sla)}</div>${meter(t.sla)}</div>
+  <div class="last">${esc(t.last)}</div>
+  <div class="acts">
+    ${!t.owner && PEOPLE[ME].team===t.queue ? `<button class="btn" type="button" data-act="take" data-key="${t.key}">Take it</button>`:''}
+    <button class="btn" type="button" data-act="assign" data-key="${t.key}">${t.owner?'Reassign':'Assign'} ${I.down}</button>
+    <button class="btn" type="button" data-act="stage" data-key="${t.key}">Stage ${I.down}</button>
+    ${!t.link && t.type!=='internal' && t.type!=='feature' ? `<button class="btn" type="button" data-act="dev" data-key="${t.key}">Send to dev</button>`:''}
+  </div>
+</div>`;
+
+const cardShort = t => { const o=S.open.has(t.key); return `
+  <article class="${cardCls(t)} short${o?' open':''}" data-key="${t.key}">
+    <div class="top">${typeTag(t.type)}<span class="key">${t.key}</span><span class="src">${t.src}</span></div>
+    <h3>${esc(t.title)}</h3>
+    <div class="ctx"><b>${esc(t.client)}</b>${t.project!=='No project'?' · '+esc(t.project):''}</div>
+    <div class="foot">${who(t)}${prio(t.prio)}</div>
+    <div class="slarow">${sla(t.sla)}<button class="unfold" type="button" aria-expanded="${o}" data-act="unfold" data-key="${t.key}">Details ${I.down}</button></div>
+    ${meter(t.sla)}
+    ${o?detail(t):''}
+  </article>`; };
+const cardDetail = t => `
+  <article class="${cardCls(t)}" data-key="${t.key}">
+    <div class="top">${typeTag(t.type)}<span class="key">${t.key}</span><span class="src">${t.src}</span>${prio(t.prio)}</div>
+    <h3>${esc(t.title)}</h3>${detail(t)}
+  </article>`;
+
+function groups(list){
+  const f = FIELDS[S.group]; const m = new Map();
+  let order = f.order ? f.order.slice() : null;
+  if(S.group==='owner'){
+    const counts = {}; tasks.filter(t=>t.stage<5).forEach(t=>{const k=f.get(t);counts[k]=(counts[k]||0)+1});
+    order = ['Unassigned', ...Object.values(PEOPLE).map(p=>p.n).sort((a,b)=>(counts[b]||0)-(counts[a]||0))];
+  }
+  (order||[]).forEach(k=>m.set(k,[]));
+  sorted(list).forEach(t=>{const k=f.get(t); if(!m.has(k)) m.set(k,[]); m.get(k).push(t);});
+  const keepEmpty = S.group==='stage' || (S.group==='owner' && !hasFilters());
+  return [...m.entries()].filter(([k,v])=>v.length||keepEmpty);
+}
+const hasFilters = () => S.q || S.quick || FILTER_KEYS.some(k=>S.filters[k]&&S.filters[k].size);
+
+function colHead(name, list){
+  const p1 = list.filter(t=>t.prio===1).length, br = list.filter(t=>t.sla.s==='breach').length, rk = list.filter(t=>t.sla.s==='risk').length;
+  const flags = `<span class="flags">${br?`<span class="flag" style="--fc:var(--crit)">${br} breached</span>`:''}${rk?`<span class="flag" style="--fc:var(--warn)">${rk} at risk</span>`:''}</span>`;
+  if(S.group==='owner'){
+    const id = Object.keys(PEOPLE).find(k=>PEOPLE[k].n===name);
+    const lead = id ? `${av(id,true)}<div style="min-width:0"><div class="nm">${name}</div><div class="sub">${PEOPLE[id].team}</div></div>`
+                    : `<span class="av none lg">?</span><div><div class="nm" style="color:var(--warn)">Unassigned</div><div class="sub">Waiting in a queue</div></div>`;
+    return `<div class="colh">${lead}<span class="cnt">${list.length}</span></div>${br||rk?`<div class="colh" style="min-height:0;padding-block:6px">${flags}</div>`:''}`;
+  }
+  let lead = `<span class="nm">${esc(name)}</span>`;
+  if(S.group==='type'){ const k=Object.keys(TYPE).find(k=>TYPE[k]===name); lead = typeTag(k); }
+  if(S.group==='prio'){ lead = prio(+name.slice(1)); }
+  if(S.group==='sla'){ const k=SLAORD.find(s=>SLAN[s]===name); lead = `<span class="sla" style="--sc:${SC[k]}">${k==='paused'?I.pause:I.clock}${name}</span>`; }
+  return `<div class="colh">${lead}<span class="cnt">${list.length}</span></div>${(br||rk)&&S.group!=='sla'?`<div class="colh" style="min-height:0;padding-block:6px">${flags}</div>`:''}`;
+}
+
+function renderBoard(){
+  const list = visible(); const gs = groups(list); const b = document.getElementById('board');
+  if(!list.length){ b.innerHTML = `<div class="col" style="flex:none;width:100%"><div class="empty">No tasks match these filters. <button class="clear" type="button" data-act="clearall">Clear filters</button></div></div>`; return; }
+  if(S.layout==='ledger'){
+    b.innerHTML = `<div class="lwrap"><div class="ledger">
+      <div class="r hd"><span></span><span>Pri</span><span>Type</span><span>Key</span><span>Title</span><span>Client</span><span>Owner</span><span>Stage</span><span>SLA</span></div>
+      ${gs.filter(([,v])=>v.length).map(([g,v])=>`<div class="gh">${esc(g)} <span class="cnt">${v.length}</span></div>
+        ${v.map(t=>{const o=S.open.has(t.key);return `<div class="r ${t.sla.s==='breach'||t.sla.s==='risk'?'flag':''}" tabindex="0" role="button" aria-expanded="${o}" data-act="row" data-key="${t.key}">
+          <span class="chev">${I.right}</span><span style="color:${PC[t.prio]}" class="prio">${bars(t.prio)}</span>${typeTag(t.type,true)}
+          <span class="key">${t.key}</span><span class="t">${esc(t.title)}</span><span class="c">${esc(t.client)}</span>${who(t)}
+          <span class="c">${STAGES[t.stage]}</span><span>${sla(t.sla)}</span></div>${o?`<div class="rx">${detail(t)}</div>`:''}`}).join('')}`).join('')}
+    </div></div>`;
+    return;
+  }
+  const card = S.layout==='detail'?cardDetail:cardShort;
+  b.innerHTML = `<div class="cols ${S.layout}">${gs.map(([g,v])=>`<section class="col" aria-label="${esc(g)}">${colHead(g,v)}<div class="colb">${v.length?v.map(card).join(''):'<div class="empty">Nothing here</div>'}</div></section>`).join('')}</div>`;
+}
+
+function renderChrome(){
+  const v = VIEWS[S.view];
+  document.getElementById('vTitle').textContent = v.title;
+  document.getElementById('vDesc').textContent = v.desc;
+  const open = tasks.filter(t=>t.stage<5);
+  document.getElementById('navViews').innerHTML = Object.entries(VIEWS).map(([k,d])=>{
+    const f={}; Object.entries(d.filters||{}).forEach(([fk,vals])=>f[fk]=new Set(vals));
+    const n = open.filter(t=>matches(t,f,d.quick||null,'')).length;
+    return `<button type="button" data-view="${k}" aria-current="${k===S.view}">${I[d.icon]}${d.title}<span class="n${k==='attention'?' hot':''}">${n}</span></button>`;
+  }).join('');
+  const navList = (key, items) => items.map(x=>{
+    const n = open.filter(t=>FIELDS[key].get(t)===x).length; const on = S.filters[key]&&S.filters[key].size===1&&S.filters[key].has(x);
+    return `<button type="button" data-nav="${key}" data-val="${esc(x)}" aria-current="${on}"><span class="dot"></span>${esc(x)}<span class="n">${n}</span></button>`;}).join('');
+  document.getElementById('navClients').innerHTML = navList('client', CLIENTS);
+  document.getElementById('navTeams').innerHTML = navList('team', TEAMS);
+
+  document.getElementById('fbtns').innerHTML = FILTER_KEYS.map(k=>{const n=S.filters[k]?S.filters[k].size:0;
+    return `<button class="fbtn${n?' on':''}" type="button" data-filter="${k}" aria-haspopup="menu">${FIELDS[k].label}${n?` <span class="k">${n}</span>`:''} ${I.down}</button>`}).join('');
+  document.getElementById('groupBtn').innerHTML = `${FIELDS[S.group].label} ${I.down}`;
+  document.getElementById('sortBtn').innerHTML = `${SORTS[S.sort]} ${I.down}`;
+  document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.v===S.layout)));
+
+  const chips = [];
+  if(S.quick) chips.push(`<span class="fchip"><span>View rule</span>${QUICK[S.quick].label}<button type="button" data-rmquick aria-label="Remove">${I.x}</button></span>`);
+  FILTER_KEYS.forEach(k=>(S.filters[k]?[...S.filters[k]]:[]).forEach(v=>chips.push(`<span class="fchip"><span>${FIELDS[k].label}</span>${esc(v)}<button type="button" data-rm="${k}" data-val="${esc(v)}" aria-label="Remove ${esc(v)}">${I.x}</button></span>`)));
+  if(chips.length) chips.push(`<button class="clear" type="button" data-act="clearall">Clear all</button>`);
+  document.getElementById('chips').innerHTML = chips.join('');
+
+  const vis = visible();
+  const st = [['all','Open',null,vis.length],['un','Unassigned','var(--warn)',vis.filter(t=>!t.owner).length],
+    ['risk','At risk','var(--warn)',vis.filter(t=>t.sla.s==='risk').length],['breach','Breached','var(--crit)',vis.filter(t=>t.sla.s==='breach').length],
+    ['paused','Waiting on client','var(--muted)',vis.filter(t=>t.sla.s==='paused').length]];
+  const slaSet = S.filters.sla, ownSet = S.filters.owner;
+  document.getElementById('stats').innerHTML = st.map(([k,l,c,n])=>{
+    const on = k==='un'?(ownSet&&ownSet.has('Unassigned')&&ownSet.size===1):(k!=='all'&&slaSet&&slaSet.size===1&&slaSet.has(SLAN[k]));
+    return `<button class="stat${on?' on':''}" type="button" data-stat="${k}" ${c?`style="--sc:${c}"`:''}><b>${n}</b><span>${l}</span></button>`;}).join('');
+}
+function render(){ renderChrome(); renderBoard(); }
+
+/* popover */
+const pop = document.getElementById('pop'); let popFor = null;
+function openPop(anchor, html, id){
+  if(popFor===id && !pop.hidden){ closePop(); return; }
+  popFor = id; pop.innerHTML = html; pop.hidden = false;
+  const r = anchor.getBoundingClientRect(); const w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  pop.style.top = (r.bottom + 6 + h > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+}
+function closePop(){ pop.hidden = true; popFor = null; }
+function filterMenu(k){
+  const f = FIELDS[k]; const open = tasks.filter(t=>t.stage<5);
+  const vals = k==='owner' ? ['Unassigned',...Object.values(PEOPLE).map(p=>p.n)] : f.order;
+  const set = S.filters[k] || new Set();
+  return `<h6>${f.label}</h6>` + vals.map(v=>`<button class="opt" type="button" role="menuitemcheckbox" aria-checked="${set.has(v)}" data-fk="${k}" data-fv="${esc(v)}"><span class="box"></span>${esc(v)}<span class="n">${open.filter(t=>f.get(t)===v).length}</span></button>`).join('');
+}
+function assignMenu(t){
+  const open = tasks.filter(x=>x.stage<5);
+  const load = id => open.filter(x=>x.owner===id).length;
+  return `<h6>Assign ${t.key} to</h6>` + TEAMS.map(team=>{
+    const ppl = Object.entries(PEOPLE).filter(([,p])=>p.team===team); if(!ppl.length) return '';
+    return `<h6>${team}</h6>` + ppl.map(([id,p])=>{const n=load(id);
+      return `<button class="opt${t.owner===id?' sel':''}" type="button" role="menuitem" data-assign="${id}" data-key="${t.key}">${av(id)}${p.n}<span class="load" title="${n} open tasks">${[1,2,3,4].map(i=>`<i class="${i<=n?'on'+(n>=4?' hi':''):''}"></i>`).join('')}</span></button>`}).join('');
+  }).join('') + (t.owner?`<h6>Or</h6><button class="opt" type="button" data-assign="" data-key="${t.key}"><span class="av none">?</span>Unassign, back to ${PEOPLE[t.owner].team} queue</button>`:'');
+}
+const stageMenu = t => `<h6>Move ${t.key} to</h6>` + STAGES.map((s,i)=>`<button class="opt${i===t.stage?' sel':''}" type="button" data-setstage="${i}" data-key="${t.key}">${s}</button>`).join('');
+
+/* toast */
+let toastT; function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
+const find = k => tasks.find(t=>t.key===k);
+
+/* events */
+document.addEventListener('click', e=>{
+  const el = e.target.closest('button,[data-act]');
+  if(!e.target.closest('#pop') && !(el && (el.dataset.filter||el.id==='groupBtn'||el.id==='sortBtn'||el.dataset.act==='assign'||el.dataset.act==='stage'))) closePop();
+  if(!el){
+    const card = e.target.closest('.card.short:not(.open)');
+    if(card){ S.open.add(card.dataset.key); renderBoard(); }
+    return;
+  }
+  const d = el.dataset;
+  if(d.view){ location.hash = d.view; return; }
+  if(d.nav){ const cur=S.filters[d.nav]; const on=cur&&cur.size===1&&cur.has(d.val); S.filters[d.nav]=on?new Set():new Set([d.val]); render(); return; }
+  if(d.filter){ openPop(el, filterMenu(d.filter), 'f-'+d.filter); return; }
+  if(d.fk){ const s=S.filters[d.fk]||(S.filters[d.fk]=new Set()); s.has(d.fv)?s.delete(d.fv):s.add(d.fv); render(); pop.innerHTML=filterMenu(d.fk); return; }
+  if(el.id==='groupBtn'){ openPop(el, '<h6>Group by</h6>'+GROUP_KEYS.map(k=>`<button class="opt${k===S.group?' sel':''}" type="button" data-group="${k}">${FIELDS[k].label}</button>`).join(''), 'group'); return; }
+  if(d.group){ S.group=d.group; closePop(); render(); return; }
+  if(el.id==='sortBtn'){ openPop(el, '<h6>Sort cards</h6>'+Object.entries(SORTS).map(([k,l])=>`<button class="opt${k===S.sort?' sel':''}" type="button" data-sort="${k}">${l}</button>`).join(''), 'sort'); return; }
+  if(d.sort){ S.sort=d.sort; closePop(); render(); return; }
+  if(d.v){ S.layout=d.v; render(); return; }
+  if(d.rm!==undefined){ S.filters[d.rm].delete(d.val); render(); return; }
+  if(el.hasAttribute('data-rmquick')){ S.quick=null; render(); return; }
+  if(d.stat){
+    if(d.stat==='all'){ S.filters.sla=new Set(); S.filters.owner=new Set(); }
+    else if(d.stat==='un'){ const on=S.filters.owner&&S.filters.owner.size===1&&S.filters.owner.has('Unassigned'); S.filters.owner=on?new Set():new Set(['Unassigned']); }
+    else { const n=SLAN[d.stat]; const on=S.filters.sla&&S.filters.sla.size===1&&S.filters.sla.has(n); S.filters.sla=on?new Set():new Set([n]); }
+    render(); return;
+  }
+  const t = d.key && find(d.key);
+  switch(d.act){
+    case 'clearall': S.filters={}; S.quick=null; S.q=''; document.getElementById('q').value=''; render(); return;
+    case 'unfold': S.open.has(t.key)?S.open.delete(t.key):S.open.add(t.key); renderBoard(); return;
+    case 'row': S.open.has(t.key)?S.open.delete(t.key):S.open.add(t.key); renderBoard(); return;
+    case 'take': t.owner=ME; t.last='Jon took this task · just now'; S.fresh=t.key; render(); toast(`${t.key} is now yours`); return;
+    case 'assign': openPop(el, assignMenu(t), 'a-'+t.key); return;
+    case 'stage': openPop(el, stageMenu(t), 's-'+t.key); return;
+    case 'dev': t.stage=3; t.link=`Jira DEV-${4430+Math.floor(Math.random()*60)} · Created from the board`; t.last='Sent to development · just now'; S.fresh=t.key; render(); toast(`${t.key} sent to development, Jira issue created`); return;
+  }
+  if(d.assign!==undefined){
+    if(d.assign){ t.owner=d.assign; t.last=`Assigned to ${PEOPLE[d.assign].n} · just now`; toast(`${t.key} assigned to ${PEOPLE[d.assign].n}`); }
+    else { t.queue=PEOPLE[t.owner].team; t.owner=null; t.last=`Returned to ${t.queue} queue · just now`; toast(`${t.key} is back in the ${t.queue} queue`); }
+    S.fresh=t.key; closePop(); render(); return;
+  }
+  if(d.setstage!==undefined){ t.stage=+d.setstage; t.last=`Moved to ${STAGES[t.stage]} · just now`; S.fresh=t.key; closePop(); render(); toast(t.stage===5?`${t.key} marked done and removed from the board`:`${t.key} moved to ${STAGES[t.stage]}`); return; }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ closePop(); closeDrawer(); }
+  const r = e.target.closest && e.target.closest('.r[data-act="row"]');
+  if(r && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); r.click(); }
+});
+window.addEventListener('resize', closePop);
+window.addEventListener('scroll', e=>{ if(!pop.contains(e.target)) closePop(); }, true);
+document.getElementById('q').addEventListener('input', e=>{ S.q=e.target.value.trim(); render(); });
+window.addEventListener('hashchange', ()=>applyView(location.hash.slice(1)));
+
+/* new task drawer */
+let newType = 'bug';
+const drawer = document.getElementById('drawerWrap');
+function openDrawer(){
+  document.getElementById('fClient').innerHTML = CLIENTS.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('fProject').innerHTML = '<option>No project</option>' + PROJECTS.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('fOwner').innerHTML = '<option value="">Leave unassigned</option>' + Object.entries(PEOPLE).map(([id,p])=>`<option value="${id}">${p.n} · ${p.team}</option>`).join('');
+  document.getElementById('fQueue').innerHTML = TEAMS.map(t=>`<option>${t}</option>`).join('');
+  drawTypes(); document.getElementById('fErr').hidden = true;
+  drawer.hidden = false; document.getElementById('fTitle').focus();
+}
+function drawTypes(){ document.getElementById('fType').innerHTML = Object.keys(TYPE).map(k=>`<button type="button" data-ntype="${k}" aria-pressed="${k===newType}" style="--tc:var(--t-${k})">${typeTag(k)}</button>`).join(''); }
+function closeDrawer(){ drawer.hidden = true; }
+document.getElementById('newBtn').addEventListener('click', openDrawer);
+document.getElementById('fCancel').addEventListener('click', closeDrawer);
+document.getElementById('scrim').addEventListener('click', closeDrawer);
+document.getElementById('fType').addEventListener('click', e=>{ const b=e.target.closest('[data-ntype]'); if(b){ newType=b.dataset.ntype; drawTypes(); } });
+document.getElementById('form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const title = document.getElementById('fTitle').value.trim();
+  if(!title){ document.getElementById('fErr').hidden=false; document.getElementById('fTitle').focus(); return; }
+  const p = +document.getElementById('fPrio').value, client = document.getElementById('fClient').value;
+  const pre = PREFIX[newType]; const n = Math.max(...tasks.filter(t=>t.key.startsWith(pre+'-')).map(t=>+t.key.split('-')[1]), 100) + 1;
+  const owner = document.getElementById('fOwner').value || null;
+  const supportish = ['incident','bug','request','question'].includes(newType) && client!=='Coral Technology';
+  const tgt = {1:['1h',' to first response'],2:['4h',' to first response'],3:['8h',' to first response'],4:['8h',' to first response']}[p];
+  const t = {key:`${pre}-${n}`, type:newType, src:'BOARD', title, client, project:document.getElementById('fProject').value, prio:p, owner,
+    queue: owner?PEOPLE[owner].team:document.getElementById('fQueue').value,
+    sla: supportish?{s:'ok',label:tgt[0]+tgt[1],used:2,kind:'First response',target:`${tgt[0]} · ${client} contract, P${p}`}:{s:'none',label:'No SLA',used:0,kind:'None',target:''},
+    stage:0, link:null, last:'Created on the board by Jon · just now', tags:[]};
+  tasks.unshift(t); S.fresh=t.key; document.getElementById('form').reset(); closeDrawer();
+  if(!matches(t)){ S.filters={}; S.quick=null; S.q=''; document.getElementById('q').value=''; }
+  render(); toast(`Created ${t.key} in Triage`);
+});
+
+applyView(location.hash.slice(1) || 'all');
+</script>

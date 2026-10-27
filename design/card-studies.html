@@ -1,0 +1,342 @@
+<title>Action Board Card Studies</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one board area with a layout switcher (Detail / Short / Ledger); short cards and ledger rows unfold in place. Legend follows. Dark only, by request. */
+:root{
+  color-scheme:dark;
+  --bg:#07080a; --surface:#0f1114; --raised:#15181c; --line:#22262c; --line-strong:#30353d;
+  --fg:#e9ebee; --muted:#8c939d; --faint:#5a6069; --accent:#a9c1ff;
+  --ok:#5ccf98; --warn:#f0b54a; --crit:#ff6b5f;
+  --t-incident:#ff6b5f; --t-bug:#e88bc8; --t-feature:#b69cff; --t-request:#7fa6ff; --t-question:#6fd3e6; --t-internal:#9aa3ad; --t-change:#d2b67c;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5;
+  background-image:radial-gradient(1200px 500px at 50% -200px, #1a2233 0%, transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1240px;margin:0 auto;padding-block:56px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:64px}
+header{display:grid;gap:14px;max-width:780px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-weight:300;font-size:clamp(32px,5vw,52px);line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-weight:400;font-size:24px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.lede{color:var(--muted);font-size:16px;max-width:65ch;margin:0}
+section{display:grid;gap:20px}
+.sec-head{display:grid;gap:8px;max-width:72ch}
+.sec-head p{margin:0;color:var(--muted)}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:13px;color:var(--muted);background:transparent;border:0;border-radius:6px;padding:6px 14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.seg button svg{width:14px;height:14px}
+.seg button[aria-pressed="true"]{background:var(--raised);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.seg button:focus-visible,button:focus-visible,.r:focus-visible,.card.a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12.5px;color:var(--muted)}
+.counts{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.counts b{font-weight:500}
+
+/* shared atoms */
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.type{display:inline-flex;align-items:center;gap:6px;color:var(--tc);font-size:12px;font-weight:500;white-space:nowrap}
+.type svg{width:14px;height:14px;flex:none}
+.key{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.src{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line-strong);border-radius:4px;padding:1px 5px;white-space:nowrap}
+.prio{display:inline-flex;align-items:flex-end;gap:2px;height:12px;color:var(--pc)}
+.prio i{width:3px;background:var(--line-strong);border-radius:1px}
+.prio i.on{background:currentColor}
+.prio i:nth-child(1){height:4px}.prio i:nth-child(2){height:7px}.prio i:nth-child(3){height:10px}.prio i:nth-child(4){height:12px}
+.prio-l{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--pc)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;font-weight:600;color:#0b0c0e;background:var(--avc);flex:none}
+.av.none{background:transparent;border:1.5px dashed var(--warn);color:var(--warn)}
+.who{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who.un span{color:var(--warn)}
+.sla{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--sc);background:color-mix(in srgb,var(--sc) 12%,transparent);border:1px solid color-mix(in srgb,var(--sc) 35%,transparent);padding:2px 8px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sla svg{width:11px;height:11px}
+.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--sc)}
+.chip{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 7px;white-space:nowrap}
+button.btn{font:inherit;font-size:12px;color:var(--fg);background:var(--raised);border:1px solid var(--line-strong);border-radius:6px;padding:4px 10px;cursor:pointer}
+button.btn:hover{border-color:var(--muted)}
+.link{font-family:var(--mono);font-size:11.5px;color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.card.alert{border-color:color-mix(in srgb,var(--crit) 45%,var(--line))}
+.card.unassigned{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+
+/* detail block, shared by Detail cards, unfolded Short cards and Ledger rows */
+.detail{display:grid;gap:14px}
+.stages{display:grid;gap:6px}
+.stages .bar{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.stages .bar i{height:4px;border-radius:2px;background:var(--line)}
+.stages .bar i.done{background:var(--faint)}
+.stages .bar i.cur{background:var(--accent)}
+.stages .lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.stages .lab b{color:var(--fg);font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12.5px;margin:0}
+.kv dt{color:var(--faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.kv dd{margin:0;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.slabox{display:grid;gap:6px;padding:10px 12px;border-radius:8px;background:var(--raised)}
+.slabox .l{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.actrow{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.actrow .act{margin-left:auto;display:flex;gap:6px}
+
+/* Detail layout */
+.grid-detail{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;align-items:start}
+.b{display:grid;gap:14px;padding:18px}
+.b .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.b .top .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.b h3{margin:0;font-size:16px;font-weight:500;line-height:1.35;text-wrap:balance}
+
+/* Short layout */
+.grid-short{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-items:start}
+.a{display:grid;gap:10px;padding:14px 14px 10px;cursor:pointer}
+.a.open{grid-column:span 2;cursor:default}
+.a .top{display:flex;align-items:center;gap:8px}
+.a .top .src{margin-left:auto}
+.a h3{margin:0;font-size:14.5px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.a.open h3{-webkit-line-clamp:unset;display:block}
+.a .ctx{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a .ctx b{color:var(--fg);font-weight:500}
+.a .foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.a .foot .who{flex:1 1 auto}
+.a .slarow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.unfold{font:inherit;font-size:11.5px;color:var(--muted);background:none;border:0;padding:2px 0;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.unfold svg{width:12px;height:12px;transition:transform .15s}
+.unfold[aria-expanded="true"] svg{transform:rotate(180deg)}
+.a .detail{border-top:1px solid var(--line);padding-top:14px;grid-template-columns:1fr 1fr;column-gap:20px}
+.a .detail .stages,.a .detail .actrow{grid-column:1/-1}
+@media (max-width:640px){.a.open{grid-column:auto}.a .detail{grid-template-columns:1fr}}
+
+/* Ledger layout */
+.rows-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.rows{min-width:1120px}
+.r{display:grid;grid-template-columns:18px 30px 128px 84px minmax(220px,1fr) 130px 210px 112px 220px;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
+.rows > .r:first-child{border-top:0;cursor:default}
+.r:not(.h):hover{background:color-mix(in srgb,var(--fg) 3%,transparent)}
+.r.h{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding-block:9px}
+.r .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r .c{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.r.flag{background:color-mix(in srgb,var(--crit) 6%,transparent)}
+.r .chev{color:var(--faint);display:grid;place-items:center}
+.r .chev svg{width:12px;height:12px;transition:transform .15s}
+.r[aria-expanded="true"] .chev svg{transform:rotate(90deg)}
+.rx{padding:4px 14px 18px 62px;background:color-mix(in srgb,var(--fg) 2%,transparent)}
+.rx .detail{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:32px;max-width:900px}
+.rx .detail .stages,.rx .detail .actrow{grid-column:1/-1}
+
+/* legend */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.lg{border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;align-content:start}
+.lg h4{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.lg ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.lg li{display:flex;align-items:center;gap:10px;font-size:12.5px;flex-wrap:wrap}
+.lg li small{color:var(--faint);font-size:11.5px}
+.note{font-size:12px;color:var(--faint);margin:0}
+.later{border:1px dashed var(--line-strong);border-radius:10px;padding:16px 18px;display:grid;gap:6px;max-width:780px}
+.later p{margin:0;color:var(--muted);font-size:13px}
+@media (max-width:520px){.wrap{padding-block:32px 64px;gap:48px}.grid-detail{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Coral MSP action board · design study 02</div>
+    <h1>One card, three layouts</h1>
+    <p class="lede">Pick the layout that suits the job. Short cards and ledger rows unfold in place to show the full detail, so nobody has to leave the board to read a task. Every layout uses the same symbols for type, source, priority, owner and SLA. The people and tickets are made up.</p>
+  </header>
+
+  <section id="board-sec">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Card layout" id="seg">
+        <button type="button" data-v="detail" aria-pressed="false"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5" height="11" rx="1"/><rect x="7.5" y="1.5" width="5" height="11" rx="1"/></svg>Detail</button>
+        <button type="button" data-v="short" aria-pressed="true"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="5" height="5" rx="1"/><rect x="7.5" y="1.5" width="5" height="5" rx="1"/><rect x="1.5" y="7.5" width="5" height="5" rx="1"/><rect x="7.5" y="7.5" width="5" height="5" rx="1"/></svg>Short</button>
+        <button type="button" data-v="ledger" aria-pressed="false"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 3h10M2 7h10M2 11h10"/></svg>Ledger</button>
+      </div>
+      <div class="counts" id="counts"></div>
+    </div>
+    <p class="hint" id="hint"></p>
+    <div id="board"></div>
+  </section>
+
+  <section id="legend">
+    <div class="sec-head">
+      <h2>The visual language</h2>
+      <p>Each attribute has its own channel. Type is a shape plus a hue, priority is signal bars, and only the SLA clock uses green, amber and red. Ownership goes in the avatar slot.</p>
+    </div>
+    <div class="legend" id="legendGrid"></div>
+  </section>
+
+  <section>
+    <div class="later">
+      <div class="eyebrow">Parked for later</div>
+      <p><b style="color:var(--fg);font-weight:500">Time tracking on the card.</b> Show logged against estimated hours. Taking a task would start a timer, and Stop would post the time to the time tracking system.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const G = {
+  incident:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 1.8 12.8 12H1.2z"/><path d="M7 5.5v3M7 10.2v.1"/></svg>',
+  bug:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5.3"/><circle cx="7" cy="7" r="1.9" fill="currentColor" stroke="none"/></svg>',
+  feature:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 1.3 12.7 7 7 12.7 1.3 7z"/></svg>',
+  request:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 8.2v3.5h10.4V8.2"/><path d="M7 1.8v6.4M4.5 5.8 7 8.2l2.5-2.4"/></svg>',
+  question:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.8 2.2h10.4v7.2H6.2L3.4 12V9.4H1.8z"/></svg>',
+  internal:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="10" height="10" rx="1.5"/></svg>',
+  change:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5h9.5L9.5 2.5M12 9.5H2.5l2 2"/></svg>',
+};
+const TYPE = {incident:'Incident',bug:'Bug',feature:'Feature',request:'Request',question:'Question',internal:'Internal task',change:'Change request'};
+const CLOCK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="4.8"/><path d="M6 3.4V6l1.8 1.2"/></svg>';
+const PAUSE = '<svg viewBox="0 0 12 12" fill="currentColor"><rect x="3" y="2.5" width="2" height="7" rx=".5"/><rect x="7" y="2.5" width="2" height="7" rx=".5"/></svg>';
+const CHEV = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5 6 7.5l3-3"/></svg>';
+const CHEVR = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3 7.5 6l-3 3"/></svg>';
+const PC = {1:'var(--crit)',2:'var(--warn)',3:'var(--fg)',4:'var(--muted)'};
+const SC = {ok:'var(--ok)',risk:'var(--warn)',breach:'var(--crit)',paused:'var(--muted)',none:'var(--faint)'};
+const STAGES = ['Triage','Ready','In progress','In development','Verify','Done'];
+
+const tasks = [
+  {key:'SUP-2381',type:'incident',src:'PORTAL',title:"Users can't sign in after SSO certificate rotation",client:'Paramount',project:'—',prio:1,
+   owner:null,queue:'Support L2',sla:{s:'risk',label:'18m to first response',used:85,kind:'First response',target:'1h · Paramount contract, P1'},stage:0,
+   link:null,last:'Opened by client admin via portal · 42m ago',tags:['SSO']},
+  {key:'SUP-2376',type:'bug',src:'EMAIL',title:'Monthly invoice export totals are off by one cent',client:'NBCU',project:'Coral MSP 4.12 release',prio:2,
+   owner:{n:'Maya Chen',i:'MC',c:'#a9c1ff'},sla:{s:'ok',label:'1d 4h to resolve',used:30,kind:'Resolution',target:'3 business days · standard, P2'},stage:3,
+   link:'Jira DEV-4410 · In review',last:'Maya commented in Jira · 22m ago',tags:['Invoicing']},
+  {key:'SUP-2350',type:'bug',src:'EMAIL',title:'Scheduled report emails are being sent twice',client:'Fox',project:'—',prio:2,
+   owner:{n:'Sam Okafor',i:'SO',c:'#e88bc8'},sla:{s:'breach',label:'Breached 3h ago',used:100,kind:'Resolution',target:'2 business days · Fox contract, P2'},stage:2,
+   link:null,last:'No activity for 26h',tags:['Escalation risk']},
+  {key:'REQ-311',type:'request',src:'EMAIL',title:'Set up 40 user accounts for the new production team',client:'Netflix',project:'Netflix onboarding',prio:3,
+   owner:null,queue:'Support L1',sla:{s:'ok',label:'6h to first response',used:25,kind:'First response',target:'8 business hours · standard, P3'},stage:0,
+   link:null,last:'Emailed by Netflix IT · 2h ago',tags:['Accounts']},
+  {key:'SUP-2369',type:'question',src:'TEAMS',title:'How do we export the audit log for a compliance review?',client:'AMC',project:'—',prio:3,
+   owner:{n:'Jon Ruiz',i:'JR',c:'#6fd3e6'},sla:{s:'paused',label:'Paused · waiting on client',used:40,kind:'Resolution',target:'5 business days · standard, P3'},stage:2,
+   link:null,last:'Jon replied in Teams · yesterday',tags:['Compliance']},
+  {key:'CR-047',type:'change',src:'JIRA',title:'Raise default session timeout from 30 to 60 minutes',client:'NBCU',project:'Coral MSP 4.12 release',prio:3,
+   owner:{n:'Lena Park',i:'LP',c:'#d2b67c'},sla:{s:'ok',label:'Due Nov 7',used:45,kind:'Due date',target:'Nov 7'},stage:4,
+   link:'Jira DEV-4398 · Ready for QA',last:'Moved to Verify in Jira · 1h ago',tags:['Config']},
+  {key:'FR-118',type:'feature',src:'PORTAL',title:'Bulk user import from CSV',client:'Coral Technology',project:'Product backlog',prio:3,
+   owner:null,queue:'Product',sla:{s:'none',label:'No SLA',used:0,kind:'None',target:'—'},stage:0,
+   link:null,last:'Asked for by Netflix, Fox and AMC · 2d ago',tags:['Requested by 3 clients']},
+  {key:'INT-552',type:'internal',src:'ADO',title:'Upgrade staging database to SQL Server 2022',client:'Coral Technology',project:'Coral MSP 4.12 release',prio:2,
+   owner:{n:'Priya Nair',i:'PN',c:'#b69cff'},sla:{s:'ok',label:'Due Nov 3',used:55,kind:'Due date',target:'Nov 3'},stage:2,
+   link:'Azure DevOps #8812 · Active',last:'Priya updated in Azure DevOps · 3h ago',tags:['Release blocker']},
+];
+
+const typeTag = (t,short) => `<span class="type" style="--tc:var(--t-${t})">${G[t]}${short?TYPE[t].split(' ')[0]:TYPE[t]}</span>`;
+const bars = p => [1,2,3,4].map(n=>`<i class="${n<=5-p?'on':''}"></i>`).join('');
+const prio = p => `<span class="prio-l" style="--pc:${PC[p]}" title="Priority ${p}"><span class="prio">${bars(p)}</span>P${p}</span>`;
+const who = t => t.owner
+  ? `<span class="who"><span class="av" style="--avc:${t.owner.c}">${t.owner.i}</span><span>${t.owner.n}</span></span>`
+  : `<span class="who un"><span class="av none">?</span><span>Unassigned · ${t.queue} queue</span></span>`;
+const sla = s => `<span class="sla" style="--sc:${SC[s.s]}">${s.s==='paused'?PAUSE:CLOCK}${s.label}</span>`;
+const meter = s => `<div class="meter" style="--sc:${SC[s.s]}"><i style="width:${s.used}%"></i></div>`;
+const cls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner?' unassigned':'');
+
+const detail = t => `<div class="detail">
+  <div class="stages"><div class="bar">${STAGES.map((s,i)=>`<i class="${i<t.stage?'done':i===t.stage?'cur':''}"></i>`).join('')}</div>
+    <div class="lab"><b>${STAGES[t.stage]}</b><span>${t.stage+1} of ${STAGES.length}</span></div></div>
+  <dl class="kv">
+    <dt>Client</dt><dd>${t.client}</dd>
+    <dt>Product</dt><dd>Coral MSP</dd>
+    <dt>Project</dt><dd>${t.project}</dd>
+    <dt>Owner</dt><dd>${who(t)}</dd>
+    ${t.link?`<dt>Linked</dt><dd><span class="link">↗ ${t.link}</span></dd>`:''}
+    <dt>Tags</dt><dd>${t.tags.map(x=>`<span class="chip">${x}</span>`).join('')}</dd>
+  </dl>
+  <div class="slabox" style="--sc:${SC[t.sla.s]}">
+    <div class="l"><span>${t.sla.kind}${t.sla.target!=='—'?' · '+t.sla.target:''}</span>${sla(t.sla)}</div>${t.sla.s!=='none'?meter(t.sla):''}
+  </div>
+  <div class="actrow"><span>${t.last}</span><span class="act">
+    ${t.owner?'<button class="btn" type="button">Reassign</button>':'<button class="btn" type="button">Take it</button><button class="btn" type="button">Assign</button>'}
+    ${t.link||t.type==='internal'?'':'<button class="btn" type="button">Send to dev</button>'}</span></div>
+</div>`;
+
+const views = {
+  detail: () => `<div class="grid-detail">${tasks.map(t=>`
+    <article class="${cls(t)} b">
+      <div class="top">${typeTag(t.type)}<span class="key">${t.key}</span><span class="right"><span class="src">${t.src}</span>${prio(t.prio)}</span></div>
+      <h3>${t.title}</h3>${detail(t)}
+    </article>`).join('')}</div>`,
+  short: () => `<div class="grid-short">${tasks.map((t,i)=>`
+    <article class="${cls(t)} a" data-i="${i}">
+      <div class="top">${typeTag(t.type)}<span class="key">${t.key}</span><span class="src">${t.src}</span></div>
+      <h3>${t.title}</h3>
+      <div class="ctx"><b>${t.client}</b>${t.project!=='—'?' · '+t.project:''}</div>
+      <div class="foot">${who(t)}${prio(t.prio)}</div>
+      <div class="slarow">${sla(t.sla)}<button class="unfold" type="button" aria-expanded="false">Details ${CHEV}</button></div>
+      ${t.sla.s!=='none'?meter(t.sla):''}
+      <div class="dx" hidden>${detail(t)}</div>
+    </article>`).join('')}</div>`,
+  ledger: () => `<div class="rows-wrap"><div class="rows">
+    <div class="r h"><span></span><span>Pri</span><span>Type</span><span>Key</span><span>Title</span><span>Client</span><span>Owner</span><span>Stage</span><span>SLA</span></div>
+    ${tasks.map(t=>`<div class="r ${t.sla.s==='breach'||t.sla.s==='risk'?'flag':''}" tabindex="0" role="button" aria-expanded="false">
+      <span class="chev">${CHEVR}</span>
+      <span style="color:${PC[t.prio]}" class="prio">${bars(t.prio)}</span>
+      ${typeTag(t.type,true)}
+      <span class="key">${t.key}</span><span class="t">${t.title}</span><span class="c">${t.client}</span>${who(t)}
+      <span class="c">${STAGES[t.stage]}</span><span>${sla(t.sla)}</span></div>
+      <div class="rx" hidden>${detail(t)}</div>`).join('')}
+  </div></div>`,
+};
+const HINT = {
+  detail:'Everything on every card. Best for a coordinator working one project or one queue.',
+  short:'Click any card to unfold its details in place. Click again or use Details to fold it.',
+  ledger:'One line per task, for leadership and long lists. Click a row to see its details underneath.',
+};
+
+const board = document.getElementById('board');
+function show(v){
+  if(!views[v]) v='short';
+  board.innerHTML = views[v]();
+  document.getElementById('hint').textContent = HINT[v];
+  document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.v===v)));
+}
+function toggleCard(card){
+  const open = !card.classList.contains('open');
+  card.classList.toggle('open', open);
+  card.querySelector('.dx').hidden = !open;
+  card.querySelector('.unfold').setAttribute('aria-expanded', String(open));
+}
+function toggleRow(r){
+  const open = r.getAttribute('aria-expanded')!=='true';
+  r.setAttribute('aria-expanded', String(open));
+  r.nextElementSibling.hidden = !open;
+}
+board.addEventListener('click', e=>{
+  if(e.target.closest('.btn')) return;
+  const unfold = e.target.closest('.unfold');
+  const card = e.target.closest('.card.a');
+  if(card && (unfold || !card.classList.contains('open'))) return toggleCard(card);
+  const r = e.target.closest('.r:not(.h)');
+  if(r) toggleRow(r);
+});
+board.addEventListener('keydown', e=>{
+  const r = e.target.closest('.r:not(.h)');
+  if(r && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggleRow(r); }
+});
+document.getElementById('seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  location.hash = b.dataset.v;
+});
+window.addEventListener('hashchange', ()=>show(location.hash.slice(1)));
+show(location.hash.slice(1) || 'short');
+
+const n = f => tasks.filter(f).length;
+document.getElementById('counts').innerHTML =
+  `<span><b>${tasks.length}</b> open</span><span style="color:var(--warn)"><b>${n(t=>!t.owner)}</b> unassigned</span><span style="color:var(--warn)"><b>${n(t=>t.sla.s==='risk')}</b> at risk</span><span style="color:var(--crit)"><b>${n(t=>t.sla.s==='breach')}</b> breached</span>`;
+
+const L = (h, items, note) => `<div class="lg"><h4>${h}</h4><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul>${note?`<p class="note">${note}</p>`:''}</div>`;
+document.getElementById('legendGrid').innerHTML = [
+  L('Type · shape and hue', Object.keys(TYPE).map(t=>typeTag(t)), 'The shapes carry the meaning, so they still work for color-blind viewers.'),
+  L('Source', [['PORTAL','Support portal'],['EMAIL','Email to support'],['TEAMS','Microsoft Teams'],['JIRA','Jira'],['ADO','Azure DevOps'],['BOARD','Created on the board']].map(([a,b])=>`<span class="src">${a}</span><small>${b}</small>`)),
+  L('Priority · signal bars', [1,2,3,4].map(p=>`${prio(p)}<small>${['Critical, act now','High','Normal','Low'][p-1]}</small>`)),
+  L('SLA clock', [
+    sla({s:'ok',label:'On track'}),sla({s:'risk',label:'At risk, under 25% left'}),sla({s:'breach',label:'Breached'}),sla({s:'paused',label:'Paused, waiting on client'}),sla({s:'none',label:'No SLA'})
+  ], 'Each client can have its own SLA terms. The card shows which terms apply.'),
+  L('Ownership', [
+    `${who(tasks[1])}<small>always one accountable person</small>`,
+    `${who({owner:null,queue:'Support L1'})}`,
+  ], 'Unassigned tasks wait in a queue and get a dashed amber border. A task that covers several clients is logged under Coral Technology.'),
+].join('');
+</script>
