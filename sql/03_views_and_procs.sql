@@ -2,6 +2,8 @@
 -- Same SLA rules as the prototype: support types (incident, bug, request, question) for
 -- outside clients run a first-response clock, then a resolution clock, both measured from
 -- creation and minus time spent waiting on the client. Everything else uses its due date.
+-- Once a support item has had its first response, scheduling it into a release or the
+-- backlog replaces the resolution clock; the item then tracks its release ship date.
 -- Wall-clock minutes for now; a business-hours calendar comes later.
 
 CREATE OR ALTER VIEW dbo.v_task_card AS
@@ -9,11 +11,13 @@ WITH base AS (
     SELECT  t.*,
             c.name AS client_name, c.is_internal, pj.name AS project_name, pr.name AS product_name,
             p.person_code AS owner_code, p.display_name AS owner_name, tm.name AS queue_name,
+            md.name AS module_name, rl.name AS release_name, rl.ship_date,
             sp.first_response_mins, sp.resolution_mins, sp.is_override,
             DATEDIFF(MINUTE, t.created_at, SYSUTCDATETIME())
               - t.sla_paused_mins
               - ISNULL(DATEDIFF(MINUTE, t.sla_paused_since, SYSUTCDATETIME()), 0) AS sla_elapsed_mins,
             CASE WHEN t.task_type IN ('incident','bug','request','question') AND c.is_internal = 0
+                      AND NOT (t.first_response_at IS NOT NULL AND t.release_id IS NOT NULL)
                  THEN 1 ELSE 0 END AS has_support_sla
     FROM dbo.task t
     JOIN dbo.client  c  ON c.client_id = t.client_id
@@ -21,6 +25,8 @@ WITH base AS (
     LEFT JOIN dbo.product pr ON pr.product_id = t.product_id
     LEFT JOIN dbo.person  p  ON p.person_id  = t.owner_person_id
     JOIN dbo.team    tm ON tm.team_id   = t.queue_team_id
+    LEFT JOIN dbo.product_module  md ON md.module_id  = t.module_id
+    LEFT JOIN dbo.product_release rl ON rl.release_id = t.release_id
     OUTER APPLY (
         SELECT TOP (1) x.first_response_mins, x.resolution_mins,
                CASE WHEN x.client_id IS NULL THEN 0 ELSE 1 END AS is_override
@@ -33,14 +39,15 @@ WITH base AS (
     SELECT b.*,
            CASE WHEN b.has_support_sla = 1 AND b.first_response_at IS NULL THEN 'First response'
                 WHEN b.has_support_sla = 1 THEN 'Resolution'
-                WHEN b.due_date IS NOT NULL THEN 'Due date' END AS sla_kind,
+                WHEN b.due_date IS NOT NULL THEN 'Due date'
+                WHEN b.release_id IS NOT NULL THEN 'Scheduled' END AS sla_kind,
            CASE WHEN b.has_support_sla = 1 AND b.first_response_at IS NULL THEN b.first_response_mins
                 WHEN b.has_support_sla = 1 THEN b.resolution_mins END AS sla_target_mins,
            DATEDIFF(MINUTE, SYSUTCDATETIME(), DATEADD(SECOND, 86399, CAST(b.due_date AS DATETIME2(0)))) AS due_left_mins
     FROM base b
 )
 SELECT  task_id, task_key, title, task_type, source_system, priority, stage,
-        client_name, product_name, project_name, owner_code, owner_name, queue_name,
+        client_name, product_name, module_name, project_name, release_name, ship_date, owner_code, owner_name, queue_name,
         CASE WHEN owner_person_id IS NULL THEN 1 ELSE 0 END AS is_unassigned,
         external_ref, due_date, created_at, first_response_at, resolved_at, updated_at,
         sla_kind, sla_target_mins, sla_elapsed_mins,
@@ -54,6 +61,9 @@ SELECT  task_id, task_key, title, task_type, source_system, priority, stage,
             WHEN due_date IS NOT NULL AND due_left_mins < 0       THEN 'breach'
             WHEN due_date IS NOT NULL AND due_left_mins < 1440    THEN 'risk'
             WHEN due_date IS NOT NULL                             THEN 'ok'
+            WHEN release_name = N'Backlog'                        THEN 'backlog'
+            WHEN ship_date IS NOT NULL AND ship_date < CAST(SYSUTCDATETIME() AS DATE) THEN 'breach'  -- missed its release
+            WHEN release_id IS NOT NULL                           THEN 'sched'
             ELSE 'none'
         END AS sla_state,
         CASE WHEN is_override = 1 THEN client_name + N' contract' ELSE N'standard' END AS sla_terms
@@ -78,6 +88,12 @@ GO
 CREATE OR ALTER VIEW dbo.v_needs_attention AS
 SELECT * FROM dbo.v_task_card
 WHERE stage <> 'done' AND (is_unassigned = 1 OR sla_state IN ('risk','breach'));
+GO
+
+-- P1/P2 active and unassigned, the view leadership asked for
+CREATE OR ALTER VIEW dbo.v_p1_p2_open AS
+SELECT * FROM dbo.v_task_card
+WHERE stage <> 'done' AND priority IN (1, 2);
 GO
 
 -- ---------- procedures behind the board's buttons ----------

@@ -20,6 +20,8 @@ PEOPLE = [  # id, name, team, color
     ('LP', 'Lena Park', 'QA', '#f3d27a'), ('RB', 'Rosa Bianchi', 'Product', '#c7c2ff'),
 ]
 # Minutes, wall clock, for the prototype. fr = first response, res = resolution.
+MODULES = ['Operations', 'Finance', 'TVOD', 'International', 'Reporting', 'Platform']
+RELEASES = [{'name': '4.12', 'date': '2026-11-07'}, {'name': '4.13', 'date': '2026-12-04'}, {'name': '5.0', 'date': '2027-01-29'}]
 SLA_DEFAULT = {'1': {'fr': 60, 'res': 240}, '2': {'fr': 240, 'res': 4320}, '3': {'fr': 480, 'res': 7200}, '4': {'fr': 480, 'res': 7200}}
 SLA_OVERRIDES = {'Paramount': {'1': {'fr': 60, 'res': 180}}, 'Fox': {'1': {'fr': 60, 'res': 240}, '2': {'fr': 240, 'res': 2880}}}
 
@@ -62,6 +64,31 @@ T = [
  ('SUP-2345','question','teams','Where is the data retention policy documented?','Fox',None,4,'HS','Support L1',5,5000,90,None,None,None,['Compliance'],'Sent the policy link',None),
  ('CR-044','change','jira','Require MFA for admin roles','AMC',None,2,'DA','Development',5,12000,None,None,None,'Jira DEV-4380',['Security'],'Released in 4.11',None),
 ]
+T += [
+ ('SUP-2388','incident','portal','TVOD purchases failing on the Canadian storefront','Netflix',None,1,None,'Support L2',0,10,None,None,None,None,['Payments'],None,None),
+ ('SUP-2389','bug','email','Finance export is missing the VAT column for UK entities','AMC',None,2,None,'Support L1',0,60,None,None,None,None,['Exports'],None,None),
+ ('SUP-2331','bug','portal','Rights window dates shift by one day for APAC territories','Fox',None,3,None,'Development',1,9000,60,None,None,None,['Rights'],'Accepted for 4.13, needs an owner',None),
+ ('SUP-2335','bug','email','Royalty statement totals round differently from invoices','Paramount',None,4,None,'Support L2',1,15000,120,None,None,None,['Royalties'],'Parked in the backlog',None),
+ ('FR-126','feature','email','Multi-currency invoices for international clients','Coral Technology','Product backlog',3,None,'Product',0,20000,None,None,None,None,['Requested by 2 clients'],'Asked for by Fox and NBCU',None),
+ ('FR-127','feature','teams','TVOD price tiers by territory','NBCU','Product backlog',4,'RB','Product',1,12000,None,None,None,None,['Pricing'],None,None),
+ ('INT-563','internal','board','Document the TVOD settlement process','Coral Technology',None,4,None,'Product',0,8000,None,None,None,None,['Docs'],None,None),
+]
+# key -> (product module, release: None | 'Backlog' | release name)
+MODREL = {
+ 'SUP-2381':('Platform',None),'SUP-2358':('Operations',None),'SUP-2384':('Operations',None),'SUP-2386':('Reporting',None),
+ 'SUP-2376':('Finance','4.12'),'SUP-2350':('Reporting',None),'SUP-2383':('TVOD',None),'SUP-2372':('Reporting','4.12'),
+ 'SUP-2361':('Finance',None),'SUP-2379':('Reporting','4.13'),'SUP-2387':('TVOD',None),'REQ-311':('Operations',None),
+ 'REQ-309':('Platform',None),'REQ-305':('International',None),'REQ-312':('Platform',None),'SUP-2369':('Operations',None),
+ 'SUP-2366':('Platform',None),'SUP-2385':('Operations',None),'SUP-2370':('Platform',None),'CR-047':('Platform','4.12'),
+ 'CR-049':('Platform','4.13'),'CR-051':('Platform',None),'CR-052':('Operations',None),'FR-118':('Operations','Backlog'),
+ 'FR-121':('Reporting','Backlog'),'FR-124':('Platform','5.0'),'FR-125':('Platform','4.13'),'INT-552':('Platform','4.12'),
+ 'INT-560':('Operations','4.12'),'INT-548':('Reporting',None),'INT-561':('Operations',None),'INT-562':('Platform','Backlog'),
+ 'SUP-2340':('Platform',None),'REQ-300':('Operations',None),'SUP-2345':('Operations',None),'CR-044':('Platform',None),
+ 'SUP-2388':('TVOD',None),'SUP-2389':('Finance',None),'SUP-2331':('International','4.13'),'SUP-2335':('Finance','Backlog'),
+ 'FR-126':('Finance','Backlog'),'FR-127':('TVOD','Backlog'),'INT-563':('TVOD','Backlog'),
+}
+assert set(MODREL) == {x[0] for x in T}, set(MODREL) ^ {x[0] for x in T}
+
 SRC_LABEL = {'portal': 'support portal', 'email': 'email', 'teams': 'Teams', 'jira': 'Jira', 'ado': 'Azure DevOps', 'board': 'the board'}
 NAME = {p[0]: p[1] for p in PEOPLE}
 
@@ -92,6 +119,7 @@ for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, 
         'firstResponseAt': iso(created + timedelta(minutes=fr)) if fr is not None else None,
         'pausedSince': iso(created + timedelta(minutes=paused)) if paused is not None else None,
         'pausedMins': 0, 'resolvedAt': iso(resolved), 'due': due_date,
+        'module': MODREL[key][0], 'release': MODREL[key][1],
         'link': link, 'tags': tags, 'notes': notes or '', 'history': hist, 'updatedAt': iso(NOW),
     }
     docs.append(d)
@@ -103,7 +131,7 @@ def put(coll, doc_id, data):
     json.dump(data, open(p, 'w'), indent=1)
     writes.append({'op': 'set', 'collection': coll, 'doc_id': doc_id, 'file_path': p})
 
-put('config', 'settings', {'clients': CLIENTS, 'projects': PROJECTS, 'teams': TEAMS,
+put('config', 'settings', {'clients': CLIENTS, 'projects': PROJECTS, 'teams': TEAMS, 'modules': MODULES, 'releases': RELEASES,
                            'sla': {'default': SLA_DEFAULT, 'overrides': SLA_OVERRIDES},
                            'seededAt': iso(NOW)})
 for pid, name, team, color in PEOPLE:
@@ -120,6 +148,12 @@ L = ['-- Coral MSP action board: test data (SQL Server)',
 L.append('INSERT INTO dbo.client (name, support_tier, is_internal) VALUES')
 L.append(',\n'.join(f"    ({q(c)}, 'Standard', {1 if c == 'Coral Technology' else 0})" for c in CLIENTS) + ';')
 L.append('\nINSERT INTO dbo.product (name) VALUES (N\'Coral MSP\');')
+L.append('\nINSERT INTO dbo.product_module (product_id, name)')
+L.append("SELECT (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), v.name FROM (VALUES")
+L.append(',\n'.join(f'    ({q(m)})' for m in MODULES) + '\n) v(name);')
+L.append('\n-- Releases count from when you run the script; Backlog has no ship date')
+L.append('INSERT INTO dbo.product_release (name, ship_date) VALUES')
+L.append(',\n'.join(f"    ({q(r['name'])}, CAST(DATEADD(DAY, {(datetime.strptime(r['date'], '%Y-%m-%d').replace(tzinfo=timezone.utc) - NOW).days + 1}, @now) AS DATE))" for r in RELEASES) + ",\n    (N'Backlog', NULL);")
 L.append('\nINSERT INTO dbo.team (name) VALUES')
 L.append(',\n'.join(f'    ({q(t)})' for t in TEAMS) + ';')
 L.append('\nINSERT INTO dbo.project (name, client_id, product_id)')
@@ -143,9 +177,9 @@ L.append(') v(client, p, fr, res) JOIN dbo.client c ON c.name = v.client;')
 
 L.append('\n-- Tasks. age = minutes since created; offsets are minutes after creation.')
 L.append('INSERT INTO dbo.task (task_key, title, task_type, source_system, priority, stage, client_id, product_id, project_id,')
-L.append('                      owner_person_id, queue_team_id, created_at, first_response_at, sla_paused_since, resolved_at, due_date, external_ref, notes)')
+L.append('                      owner_person_id, queue_team_id, module_id, release_id, created_at, first_response_at, sla_paused_since, resolved_at, due_date, external_ref, notes)')
 L.append('SELECT v.task_key, v.title, v.task_type, v.source_system, v.priority, v.stage, c.client_id,')
-L.append("       (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), pj.project_id, p.person_id, tm.team_id,")
+L.append("       (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), pj.project_id, p.person_id, tm.team_id, md.module_id, rl.release_id,")
 L.append('       DATEADD(MINUTE, -v.age, @now),')
 L.append('       CASE WHEN v.fr IS NOT NULL THEN DATEADD(MINUTE, v.fr - v.age, @now) END,')
 L.append('       CASE WHEN v.paused IS NOT NULL THEN DATEADD(MINUTE, v.paused - v.age, @now) END,')
@@ -158,13 +192,15 @@ vals = []
 for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, paused, due, link, tags, last, notes) in T:
     n = lambda x: 'NULL' if x is None else str(x)
     vals.append(f"    ({q(key)}, {q(title)}, {q(typ)}, {q(src)}, {prio}, {q(STAGE[stage])}, {q(client)}, {q(project)}, {q(owner)}, {q(queue)}, "
-                f"{age}, {n(fr)}, {n(paused)}, {n(due)}, {q(link)}, {q(notes)})")
+                f"{q(MODREL[key][0])}, {q(MODREL[key][1])}, {age}, {n(fr)}, {n(paused)}, {n(due)}, {q(link)}, {q(notes)})")
 L.append(',\n'.join(vals))
-L.append(') v(task_key, title, task_type, source_system, priority, stage, client, project, owner_code, queue, age, fr, paused, due_days, external_ref, notes)')
+L.append(') v(task_key, title, task_type, source_system, priority, stage, client, project, owner_code, queue, module, rel, age, fr, paused, due_days, external_ref, notes)')
 L.append('JOIN dbo.client c ON c.name = v.client')
 L.append('LEFT JOIN dbo.project pj ON pj.name = v.project')
 L.append('LEFT JOIN dbo.person p ON p.person_code = v.owner_code')
-L.append('LEFT JOIN dbo.team tm ON tm.name = v.queue;')
+L.append('LEFT JOIN dbo.team tm ON tm.name = v.queue')
+L.append('LEFT JOIN dbo.product_module md ON md.name = v.module')
+L.append('LEFT JOIN dbo.product_release rl ON rl.name = v.rel;')
 
 L.append('\n-- Tags and activity history')
 L.append('INSERT INTO dbo.task_tag (task_id, tag)')

@@ -13,6 +13,23 @@ INSERT INTO dbo.client (name, support_tier, is_internal) VALUES
 
 INSERT INTO dbo.product (name) VALUES (N'Coral MSP');
 
+INSERT INTO dbo.product_module (product_id, name)
+SELECT (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), v.name FROM (VALUES
+    (N'Operations'),
+    (N'Finance'),
+    (N'TVOD'),
+    (N'International'),
+    (N'Reporting'),
+    (N'Platform')
+) v(name);
+
+-- Releases count from when you run the script; Backlog has no ship date
+INSERT INTO dbo.product_release (name, ship_date) VALUES
+    (N'4.12', CAST(DATEADD(DAY, 10, @now) AS DATE)),
+    (N'4.13', CAST(DATEADD(DAY, 37, @now) AS DATE)),
+    (N'5.0', CAST(DATEADD(DAY, 93, @now) AS DATE)),
+    (N'Backlog', NULL);
+
 INSERT INTO dbo.team (name) VALUES
     (N'Support L1'),
     (N'Support L2'),
@@ -61,9 +78,9 @@ SELECT c.client_id, NULL, v.p, v.fr, v.res FROM (VALUES
 
 -- Tasks. age = minutes since created; offsets are minutes after creation.
 INSERT INTO dbo.task (task_key, title, task_type, source_system, priority, stage, client_id, product_id, project_id,
-                      owner_person_id, queue_team_id, created_at, first_response_at, sla_paused_since, resolved_at, due_date, external_ref, notes)
+                      owner_person_id, queue_team_id, module_id, release_id, created_at, first_response_at, sla_paused_since, resolved_at, due_date, external_ref, notes)
 SELECT v.task_key, v.title, v.task_type, v.source_system, v.priority, v.stage, c.client_id,
-       (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), pj.project_id, p.person_id, tm.team_id,
+       (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), pj.project_id, p.person_id, tm.team_id, md.module_id, rl.release_id,
        DATEADD(MINUTE, -v.age, @now),
        CASE WHEN v.fr IS NOT NULL THEN DATEADD(MINUTE, v.fr - v.age, @now) END,
        CASE WHEN v.paused IS NOT NULL THEN DATEADD(MINUTE, v.paused - v.age, @now) END,
@@ -71,47 +88,56 @@ SELECT v.task_key, v.title, v.task_type, v.source_system, v.priority, v.stage, c
        CASE WHEN v.due_days IS NOT NULL THEN CAST(DATEADD(DAY, v.due_days, @now) AS DATE) END,
        v.external_ref, v.notes
 FROM (VALUES
-    (N'SUP-2381', N'Users can''t sign in after SSO certificate rotation', N'incident', N'portal', 1, N'triage', N'Paramount', NULL, NULL, N'Support L2', 45, NULL, NULL, NULL, NULL, N'All Paramount admins locked out since the 9pm certificate rotation.'),
-    (N'SUP-2358', N'Intermittent 502 errors on the AMC partner portal', N'incident', N'email', 1, N'in_dev', N'AMC', NULL, N'OH', N'Development', 300, 10, NULL, NULL, N'Jira DEV-4421', NULL),
-    (N'SUP-2384', N'Asset ingest queue stalled for live sports feeds', N'incident', N'teams', 1, N'in_progress', N'Fox', NULL, N'AK', N'Support L2', 90, 15, NULL, NULL, NULL, NULL),
-    (N'SUP-2386', N'Playback analytics delayed by about two hours', N'incident', N'email', 2, N'triage', N'NBCU', NULL, NULL, N'Support L2', 20, NULL, NULL, NULL, NULL, NULL),
-    (N'SUP-2376', N'Monthly invoice export totals are off by one cent', N'bug', N'email', 2, N'in_dev', N'NBCU', N'Coral MSP 4.12 release', N'MC', N'Development', 1500, 60, NULL, NULL, N'Jira DEV-4410', NULL),
-    (N'SUP-2350', N'Scheduled report emails are being sent twice', N'bug', N'email', 2, N'in_progress', N'Fox', NULL, N'SO', N'Support L2', 3100, 100, NULL, NULL, NULL, NULL),
-    (N'SUP-2383', N'Thumbnail generation fails for 4K uploads', N'bug', N'portal', 2, N'ready', N'Netflix', N'Netflix onboarding', NULL, N'Development', 190, NULL, NULL, NULL, NULL, NULL),
-    (N'SUP-2372', N'Export to Excel drops rows past 65,000', N'bug', N'email', 2, N'in_dev', N'Netflix', NULL, N'DA', N'Development', 2000, 120, NULL, NULL, N'Jira DEV-4417', NULL),
-    (N'SUP-2361', N'Usage report double counts shared seats', N'bug', N'email', 2, N'verify', N'Paramount', N'Paramount reporting rollout', N'MC', N'Development', 2600, 90, 2000, NULL, N'Jira DEV-4409', NULL),
-    (N'SUP-2379', N'Dashboard widgets show UTC instead of local time', N'bug', N'portal', 3, N'ready', N'AMC', NULL, N'HS', N'Support L1', 1500, 200, NULL, NULL, NULL, NULL),
-    (N'SUP-2387', N'Search ignores accented characters in titles', N'bug', N'portal', 3, N'triage', N'AMC', NULL, NULL, N'Support L1', 400, NULL, NULL, NULL, NULL, NULL),
-    (N'REQ-311', N'Set up 40 user accounts for the new production team', N'request', N'email', 3, N'triage', N'Netflix', N'Netflix onboarding', NULL, N'Support L1', 120, NULL, NULL, NULL, NULL, N'Spreadsheet of names attached to the original email.'),
-    (N'REQ-309', N'Enable API access for a new integration partner', N'request', N'portal', 3, N'in_progress', N'Paramount', N'Paramount reporting rollout', N'HS', N'Support L1', 5600, 300, NULL, NULL, NULL, NULL),
-    (N'REQ-305', N'Add NBCU''s new subsidiary as a tenant', N'request', N'teams', 3, N'ready', N'NBCU', NULL, N'SO', N'Support L2', 2900, 100, NULL, NULL, NULL, NULL),
-    (N'REQ-312', N'Raise API rate limit for the nightly sync', N'request', N'email', 3, N'in_progress', N'Fox', NULL, N'AK', N'Support L2', 1400, 90, NULL, NULL, NULL, NULL),
-    (N'SUP-2369', N'How do we export the audit log for a compliance review?', N'question', N'teams', 3, N'in_progress', N'AMC', NULL, N'JR', N'Support L1', 2900, 60, 2800, NULL, NULL, NULL),
-    (N'SUP-2366', N'Which IP ranges should Paramount allowlist?', N'question', N'email', 4, N'in_progress', N'Paramount', NULL, N'JR', N'Support L1', 1000, 200, NULL, NULL, NULL, NULL),
-    (N'SUP-2385', N'Can we schedule exports to an SFTP folder?', N'question', N'portal', 4, N'triage', N'Fox', NULL, NULL, N'Support L1', 30, NULL, NULL, NULL, NULL, NULL),
-    (N'SUP-2370', N'Is there a sandbox environment for testing?', N'question', N'email', 3, N'in_progress', N'Netflix', N'Netflix onboarding', N'HS', N'Support L1', 3000, 120, NULL, NULL, NULL, NULL),
-    (N'CR-047', N'Raise default session timeout from 30 to 60 minutes', N'change', N'jira', 3, N'verify', N'NBCU', N'Coral MSP 4.12 release', N'LP', N'QA', 4000, NULL, NULL, 10, N'Jira DEV-4398', NULL),
-    (N'CR-049', N'Switch Fox SSO to the new identity provider', N'change', N'jira', 2, N'in_dev', N'Fox', N'Fox SSO migration', N'DA', N'Development', 9000, NULL, NULL, 17, N'Jira DEV-4402', NULL),
-    (N'CR-051', N'Rotate storage account keys for the EU region', N'change', N'ado', 2, N'in_progress', N'Coral Technology', NULL, N'PN', N'Platform', 6000, NULL, NULL, 0, N'Azure DevOps #8840', NULL),
-    (N'CR-052', N'Add the Paramount logo to the client portal sign-in page', N'change', N'board', 3, N'ready', N'Paramount', N'Paramount reporting rollout', N'JR', N'Support L1', 2000, NULL, NULL, 5, NULL, NULL),
-    (N'FR-118', N'Bulk user import from CSV', N'feature', N'portal', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', 2900, NULL, NULL, NULL, NULL, NULL),
-    (N'FR-121', N'Saved filters on the content dashboard', N'feature', N'teams', 4, N'ready', N'NBCU', N'Product backlog', N'RB', N'Product', 4500, NULL, NULL, NULL, NULL, NULL),
-    (N'FR-124', N'Single sign-on for the mobile app', N'feature', N'email', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', 7200, NULL, NULL, NULL, NULL, NULL),
-    (N'FR-125', N'Webhook notifications for task updates', N'feature', N'board', 3, N'triage', N'Coral Technology', N'Product backlog', N'RB', N'Product', 600, NULL, NULL, NULL, NULL, NULL),
-    (N'INT-552', N'Upgrade staging database to SQL Server 2022', N'internal', N'ado', 2, N'in_progress', N'Coral Technology', N'Coral MSP 4.12 release', N'PN', N'Platform', 5000, NULL, NULL, 6, N'Azure DevOps #8812', NULL),
-    (N'INT-560', N'Write release notes for Coral MSP 4.12', N'internal', N'board', 3, N'ready', N'Coral Technology', N'Coral MSP 4.12 release', N'RB', N'Product', 1400, NULL, NULL, 9, NULL, NULL),
-    (N'INT-548', N'Load test the new reporting API', N'internal', N'ado', 3, N'in_progress', N'Coral Technology', N'Paramount reporting rollout', N'LP', N'QA', 8000, NULL, NULL, 13, N'Azure DevOps #8790', NULL),
-    (N'INT-561', N'Publish the November on-call rota', N'internal', N'board', 3, N'in_progress', N'Coral Technology', NULL, N'SO', N'Support L2', 2500, NULL, NULL, 3, NULL, NULL),
-    (N'INT-562', N'Remove stale feature flags', N'internal', N'board', 4, N'ready', N'Coral Technology', NULL, N'OH', N'Development', 9000, NULL, NULL, NULL, NULL, NULL),
-    (N'SUP-2340', N'Password reset emails landing in spam', N'bug', N'email', 2, N'done', N'NBCU', NULL, N'MC', N'Development', 6000, 60, NULL, NULL, N'Jira DEV-4390', NULL),
-    (N'REQ-300', N'Provision a staging tenant for Netflix', N'request', N'portal', 3, N'done', N'Netflix', N'Netflix onboarding', N'SO', N'Support L2', 7000, 120, NULL, NULL, NULL, NULL),
-    (N'SUP-2345', N'Where is the data retention policy documented?', N'question', N'teams', 4, N'done', N'Fox', NULL, N'HS', N'Support L1', 5000, 90, NULL, NULL, NULL, NULL),
-    (N'CR-044', N'Require MFA for admin roles', N'change', N'jira', 2, N'done', N'AMC', NULL, N'DA', N'Development', 12000, NULL, NULL, NULL, N'Jira DEV-4380', NULL)
-) v(task_key, title, task_type, source_system, priority, stage, client, project, owner_code, queue, age, fr, paused, due_days, external_ref, notes)
+    (N'SUP-2381', N'Users can''t sign in after SSO certificate rotation', N'incident', N'portal', 1, N'triage', N'Paramount', NULL, NULL, N'Support L2', N'Platform', NULL, 45, NULL, NULL, NULL, NULL, N'All Paramount admins locked out since the 9pm certificate rotation.'),
+    (N'SUP-2358', N'Intermittent 502 errors on the AMC partner portal', N'incident', N'email', 1, N'in_dev', N'AMC', NULL, N'OH', N'Development', N'Operations', NULL, 300, 10, NULL, NULL, N'Jira DEV-4421', NULL),
+    (N'SUP-2384', N'Asset ingest queue stalled for live sports feeds', N'incident', N'teams', 1, N'in_progress', N'Fox', NULL, N'AK', N'Support L2', N'Operations', NULL, 90, 15, NULL, NULL, NULL, NULL),
+    (N'SUP-2386', N'Playback analytics delayed by about two hours', N'incident', N'email', 2, N'triage', N'NBCU', NULL, NULL, N'Support L2', N'Reporting', NULL, 20, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2376', N'Monthly invoice export totals are off by one cent', N'bug', N'email', 2, N'in_dev', N'NBCU', N'Coral MSP 4.12 release', N'MC', N'Development', N'Finance', N'4.12', 1500, 60, NULL, NULL, N'Jira DEV-4410', NULL),
+    (N'SUP-2350', N'Scheduled report emails are being sent twice', N'bug', N'email', 2, N'in_progress', N'Fox', NULL, N'SO', N'Support L2', N'Reporting', NULL, 3100, 100, NULL, NULL, NULL, NULL),
+    (N'SUP-2383', N'Thumbnail generation fails for 4K uploads', N'bug', N'portal', 2, N'ready', N'Netflix', N'Netflix onboarding', NULL, N'Development', N'TVOD', NULL, 190, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2372', N'Export to Excel drops rows past 65,000', N'bug', N'email', 2, N'in_dev', N'Netflix', NULL, N'DA', N'Development', N'Reporting', N'4.12', 2000, 120, NULL, NULL, N'Jira DEV-4417', NULL),
+    (N'SUP-2361', N'Usage report double counts shared seats', N'bug', N'email', 2, N'verify', N'Paramount', N'Paramount reporting rollout', N'MC', N'Development', N'Finance', NULL, 2600, 90, 2000, NULL, N'Jira DEV-4409', NULL),
+    (N'SUP-2379', N'Dashboard widgets show UTC instead of local time', N'bug', N'portal', 3, N'ready', N'AMC', NULL, N'HS', N'Support L1', N'Reporting', N'4.13', 1500, 200, NULL, NULL, NULL, NULL),
+    (N'SUP-2387', N'Search ignores accented characters in titles', N'bug', N'portal', 3, N'triage', N'AMC', NULL, NULL, N'Support L1', N'TVOD', NULL, 400, NULL, NULL, NULL, NULL, NULL),
+    (N'REQ-311', N'Set up 40 user accounts for the new production team', N'request', N'email', 3, N'triage', N'Netflix', N'Netflix onboarding', NULL, N'Support L1', N'Operations', NULL, 120, NULL, NULL, NULL, NULL, N'Spreadsheet of names attached to the original email.'),
+    (N'REQ-309', N'Enable API access for a new integration partner', N'request', N'portal', 3, N'in_progress', N'Paramount', N'Paramount reporting rollout', N'HS', N'Support L1', N'Platform', NULL, 5600, 300, NULL, NULL, NULL, NULL),
+    (N'REQ-305', N'Add NBCU''s new subsidiary as a tenant', N'request', N'teams', 3, N'ready', N'NBCU', NULL, N'SO', N'Support L2', N'International', NULL, 2900, 100, NULL, NULL, NULL, NULL),
+    (N'REQ-312', N'Raise API rate limit for the nightly sync', N'request', N'email', 3, N'in_progress', N'Fox', NULL, N'AK', N'Support L2', N'Platform', NULL, 1400, 90, NULL, NULL, NULL, NULL),
+    (N'SUP-2369', N'How do we export the audit log for a compliance review?', N'question', N'teams', 3, N'in_progress', N'AMC', NULL, N'JR', N'Support L1', N'Operations', NULL, 2900, 60, 2800, NULL, NULL, NULL),
+    (N'SUP-2366', N'Which IP ranges should Paramount allowlist?', N'question', N'email', 4, N'in_progress', N'Paramount', NULL, N'JR', N'Support L1', N'Platform', NULL, 1000, 200, NULL, NULL, NULL, NULL),
+    (N'SUP-2385', N'Can we schedule exports to an SFTP folder?', N'question', N'portal', 4, N'triage', N'Fox', NULL, NULL, N'Support L1', N'Operations', NULL, 30, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2370', N'Is there a sandbox environment for testing?', N'question', N'email', 3, N'in_progress', N'Netflix', N'Netflix onboarding', N'HS', N'Support L1', N'Platform', NULL, 3000, 120, NULL, NULL, NULL, NULL),
+    (N'CR-047', N'Raise default session timeout from 30 to 60 minutes', N'change', N'jira', 3, N'verify', N'NBCU', N'Coral MSP 4.12 release', N'LP', N'QA', N'Platform', N'4.12', 4000, NULL, NULL, 10, N'Jira DEV-4398', NULL),
+    (N'CR-049', N'Switch Fox SSO to the new identity provider', N'change', N'jira', 2, N'in_dev', N'Fox', N'Fox SSO migration', N'DA', N'Development', N'Platform', N'4.13', 9000, NULL, NULL, 17, N'Jira DEV-4402', NULL),
+    (N'CR-051', N'Rotate storage account keys for the EU region', N'change', N'ado', 2, N'in_progress', N'Coral Technology', NULL, N'PN', N'Platform', N'Platform', NULL, 6000, NULL, NULL, 0, N'Azure DevOps #8840', NULL),
+    (N'CR-052', N'Add the Paramount logo to the client portal sign-in page', N'change', N'board', 3, N'ready', N'Paramount', N'Paramount reporting rollout', N'JR', N'Support L1', N'Operations', NULL, 2000, NULL, NULL, 5, NULL, NULL),
+    (N'FR-118', N'Bulk user import from CSV', N'feature', N'portal', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', N'Operations', N'Backlog', 2900, NULL, NULL, NULL, NULL, NULL),
+    (N'FR-121', N'Saved filters on the content dashboard', N'feature', N'teams', 4, N'ready', N'NBCU', N'Product backlog', N'RB', N'Product', N'Reporting', N'Backlog', 4500, NULL, NULL, NULL, NULL, NULL),
+    (N'FR-124', N'Single sign-on for the mobile app', N'feature', N'email', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', N'Platform', N'5.0', 7200, NULL, NULL, NULL, NULL, NULL),
+    (N'FR-125', N'Webhook notifications for task updates', N'feature', N'board', 3, N'triage', N'Coral Technology', N'Product backlog', N'RB', N'Product', N'Platform', N'4.13', 600, NULL, NULL, NULL, NULL, NULL),
+    (N'INT-552', N'Upgrade staging database to SQL Server 2022', N'internal', N'ado', 2, N'in_progress', N'Coral Technology', N'Coral MSP 4.12 release', N'PN', N'Platform', N'Platform', N'4.12', 5000, NULL, NULL, 6, N'Azure DevOps #8812', NULL),
+    (N'INT-560', N'Write release notes for Coral MSP 4.12', N'internal', N'board', 3, N'ready', N'Coral Technology', N'Coral MSP 4.12 release', N'RB', N'Product', N'Operations', N'4.12', 1400, NULL, NULL, 9, NULL, NULL),
+    (N'INT-548', N'Load test the new reporting API', N'internal', N'ado', 3, N'in_progress', N'Coral Technology', N'Paramount reporting rollout', N'LP', N'QA', N'Reporting', NULL, 8000, NULL, NULL, 13, N'Azure DevOps #8790', NULL),
+    (N'INT-561', N'Publish the November on-call rota', N'internal', N'board', 3, N'in_progress', N'Coral Technology', NULL, N'SO', N'Support L2', N'Operations', NULL, 2500, NULL, NULL, 3, NULL, NULL),
+    (N'INT-562', N'Remove stale feature flags', N'internal', N'board', 4, N'ready', N'Coral Technology', NULL, N'OH', N'Development', N'Platform', N'Backlog', 9000, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2340', N'Password reset emails landing in spam', N'bug', N'email', 2, N'done', N'NBCU', NULL, N'MC', N'Development', N'Platform', NULL, 6000, 60, NULL, NULL, N'Jira DEV-4390', NULL),
+    (N'REQ-300', N'Provision a staging tenant for Netflix', N'request', N'portal', 3, N'done', N'Netflix', N'Netflix onboarding', N'SO', N'Support L2', N'Operations', NULL, 7000, 120, NULL, NULL, NULL, NULL),
+    (N'SUP-2345', N'Where is the data retention policy documented?', N'question', N'teams', 4, N'done', N'Fox', NULL, N'HS', N'Support L1', N'Operations', NULL, 5000, 90, NULL, NULL, NULL, NULL),
+    (N'CR-044', N'Require MFA for admin roles', N'change', N'jira', 2, N'done', N'AMC', NULL, N'DA', N'Development', N'Platform', NULL, 12000, NULL, NULL, NULL, N'Jira DEV-4380', NULL),
+    (N'SUP-2388', N'TVOD purchases failing on the Canadian storefront', N'incident', N'portal', 1, N'triage', N'Netflix', NULL, NULL, N'Support L2', N'TVOD', NULL, 10, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2389', N'Finance export is missing the VAT column for UK entities', N'bug', N'email', 2, N'triage', N'AMC', NULL, NULL, N'Support L1', N'Finance', NULL, 60, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2331', N'Rights window dates shift by one day for APAC territories', N'bug', N'portal', 3, N'ready', N'Fox', NULL, NULL, N'Development', N'International', N'4.13', 9000, 60, NULL, NULL, NULL, NULL),
+    (N'SUP-2335', N'Royalty statement totals round differently from invoices', N'bug', N'email', 4, N'ready', N'Paramount', NULL, NULL, N'Support L2', N'Finance', N'Backlog', 15000, 120, NULL, NULL, NULL, NULL),
+    (N'FR-126', N'Multi-currency invoices for international clients', N'feature', N'email', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', N'Finance', N'Backlog', 20000, NULL, NULL, NULL, NULL, NULL),
+    (N'FR-127', N'TVOD price tiers by territory', N'feature', N'teams', 4, N'ready', N'NBCU', N'Product backlog', N'RB', N'Product', N'TVOD', N'Backlog', 12000, NULL, NULL, NULL, NULL, NULL),
+    (N'INT-563', N'Document the TVOD settlement process', N'internal', N'board', 4, N'triage', N'Coral Technology', NULL, NULL, N'Product', N'TVOD', N'Backlog', 8000, NULL, NULL, NULL, NULL, NULL)
+) v(task_key, title, task_type, source_system, priority, stage, client, project, owner_code, queue, module, rel, age, fr, paused, due_days, external_ref, notes)
 JOIN dbo.client c ON c.name = v.client
 LEFT JOIN dbo.project pj ON pj.name = v.project
 LEFT JOIN dbo.person p ON p.person_code = v.owner_code
-LEFT JOIN dbo.team tm ON tm.name = v.queue;
+LEFT JOIN dbo.team tm ON tm.name = v.queue
+LEFT JOIN dbo.product_module md ON md.name = v.module
+LEFT JOIN dbo.product_release rl ON rl.name = v.rel;
 
 -- Tags and activity history
 INSERT INTO dbo.task_tag (task_id, tag)
@@ -151,7 +177,14 @@ SELECT t.task_id, v.tag FROM (VALUES
     (N'SUP-2340', N'Email'),
     (N'REQ-300', N'Tenants'),
     (N'SUP-2345', N'Compliance'),
-    (N'CR-044', N'Security')
+    (N'CR-044', N'Security'),
+    (N'SUP-2388', N'Payments'),
+    (N'SUP-2389', N'Exports'),
+    (N'SUP-2331', N'Rights'),
+    (N'SUP-2335', N'Royalties'),
+    (N'FR-126', N'Requested by 2 clients'),
+    (N'FR-127', N'Pricing'),
+    (N'INT-563', N'Docs')
 ) v(task_key, tag) JOIN dbo.task t ON t.task_key = v.task_key;
 
 INSERT INTO dbo.task_activity (task_id, occurred_at, message)
@@ -264,5 +297,18 @@ SELECT t.task_id, DATEADD(SECOND, v.secs_ago * -1, @now), v.msg FROM (VALUES
     (N'CR-044', 720000, N'Created from Jira'),
     (N'CR-044', 718200, N'Assigned to Diego Alvarez'),
     (N'CR-044', 288000, N'Moved to Done'),
-    (N'CR-044', 10800, N'Released in 4.11')
+    (N'CR-044', 10800, N'Released in 4.11'),
+    (N'SUP-2388', 600, N'Created from support portal'),
+    (N'SUP-2389', 3600, N'Created from email'),
+    (N'SUP-2331', 540000, N'Created from support portal'),
+    (N'SUP-2331', 536400, N'First response sent'),
+    (N'SUP-2331', 10800, N'Accepted for 4.13, needs an owner'),
+    (N'SUP-2335', 900000, N'Created from email'),
+    (N'SUP-2335', 892800, N'First response sent'),
+    (N'SUP-2335', 10800, N'Parked in the backlog'),
+    (N'FR-126', 1200000, N'Created from email'),
+    (N'FR-126', 10800, N'Asked for by Fox and NBCU'),
+    (N'FR-127', 720000, N'Created from Teams'),
+    (N'FR-127', 718200, N'Assigned to Rosa Bianchi'),
+    (N'INT-563', 480000, N'Created from the board')
 ) v(task_key, secs_ago, msg) JOIN dbo.task t ON t.task_key = v.task_key;
