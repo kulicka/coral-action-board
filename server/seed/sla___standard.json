@@ -1,0 +1,49 @@
+{
+ "client": "*",
+ "label": "Coral standard",
+ "verification": "standard",
+ "basis": "Coral standard operational SLA",
+ "hours": "8am\u20136pm ET, Mon\u2013Fri; holidays excluded",
+ "sev": {
+  "1": {
+   "resp": {
+    "n": 2,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 24,
+    "u": "h",
+    "note": "Commercially reasonable efforts"
+   }
+  },
+  "2": {
+   "resp": {
+    "n": 4,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 2,
+    "u": "bd"
+   }
+  },
+  "3": {
+   "resp": {
+    "n": 8,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 10,
+    "u": "bd"
+   }
+  },
+  "4": {
+   "resp": {
+    "n": 2,
+    "u": "bd"
+   },
+   "fix": {
+    "u": "next"
+   }
+  }
+ }
+}

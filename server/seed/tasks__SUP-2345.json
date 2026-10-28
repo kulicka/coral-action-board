@@ -9,11 +9,11 @@
  "owner": "HS",
  "queue": "Support L1",
  "stage": 6,
- "createdAt": "2026-10-25T02:41:42Z",
- "firstResponseAt": "2026-10-25T04:11:42Z",
+ "createdAt": "2026-10-25T03:43:32Z",
+ "firstResponseAt": "2026-10-25T05:13:32Z",
  "pausedSince": null,
  "pausedMins": 0,
- "resolvedAt": "2026-10-27T04:41:42Z",
+ "resolvedAt": "2026-10-27T05:43:32Z",
  "due": null,
  "module": "Operations",
  "release": null,
@@ -24,25 +24,25 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-25T02:41:42Z",
+   "at": "2026-10-25T03:43:32Z",
    "text": "Created from Teams"
   },
   {
-   "at": "2026-10-25T03:11:42Z",
+   "at": "2026-10-25T04:13:32Z",
    "text": "Assigned to Hana Sato"
   },
   {
-   "at": "2026-10-25T04:11:42Z",
+   "at": "2026-10-25T05:13:32Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-27T04:41:42Z",
+   "at": "2026-10-27T05:43:32Z",
    "text": "Moved to Done"
   },
   {
-   "at": "2026-10-28T11:01:42Z",
+   "at": "2026-10-28T12:03:32Z",
    "text": "Sent the policy link"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

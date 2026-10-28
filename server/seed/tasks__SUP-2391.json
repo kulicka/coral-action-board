@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2391",
+ "type": "question",
+ "source": "email",
+ "title": "How do we add a new territory to the price list?",
+ "client": "NEON",
+ "project": null,
+ "priority": 3,
+ "owner": "HS",
+ "queue": "Support L1",
+ "stage": 1,
+ "createdAt": "2026-10-28T10:03:32Z",
+ "firstResponseAt": "2026-10-28T10:48:32Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Pricing"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T10:03:32Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-28T10:33:32Z",
+   "text": "Assigned to Hana Sato"
+  },
+  {
+   "at": "2026-10-28T10:48:32Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T14:03:32Z",
+   "text": "Sent the how-to, waiting to confirm"
+  }
+ ],
+ "updatedAt": "2026-10-28T15:03:32Z"
+}

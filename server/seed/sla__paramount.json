@@ -1,0 +1,60 @@
+{
+ "client": "Paramount",
+ "label": "Paramount / CBS",
+ "deployment": "Customer-hosted",
+ "basis": "Assumed Coral standard operational SLA",
+ "verification": "assumed",
+ "uptime": "N/A",
+ "hours": "8am\u20136pm ET, Mon\u2013Fri; holidays excluded",
+ "afterHours": "By written agreement (assumed)",
+ "rto": "N/A",
+ "rpo": "N/A",
+ "hourlyBackups": "Customer responsibility / unverified",
+ "dailyBackups": "Customer responsibility / unverified",
+ "restore": "N/A",
+ "credits": "None verified",
+ "special": "A separate amended work order gives low, medium and high bugs 3, 6 and 10 days of development effort. That is effort, not an elapsed-time incident SLA.",
+ "source": "Coral Tech - Paramount Global Amended Work Order AMS - 3-9-2022 CLEAN.pdf; CBS MSA and work order",
+ "sev": {
+  "1": {
+   "resp": {
+    "n": 2,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 24,
+    "u": "h",
+    "note": "Target"
+   }
+  },
+  "2": {
+   "resp": {
+    "n": 4,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 2,
+    "u": "bd"
+   }
+  },
+  "3": {
+   "resp": {
+    "n": 8,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 10,
+    "u": "bd"
+   }
+  },
+  "4": {
+   "resp": {
+    "n": 2,
+    "u": "bd"
+   },
+   "fix": {
+    "u": "next"
+   }
+  }
+ }
+}

@@ -9,8 +9,8 @@
  "owner": "OH",
  "queue": "Development",
  "stage": 3,
- "createdAt": "2026-10-28T09:01:42Z",
- "firstResponseAt": "2026-10-28T09:11:42Z",
+ "createdAt": "2026-10-28T10:03:32Z",
+ "firstResponseAt": "2026-10-28T10:13:32Z",
  "pausedSince": null,
  "pausedMins": 0,
  "resolvedAt": null,
@@ -24,21 +24,21 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-28T09:01:42Z",
+   "at": "2026-10-28T10:03:32Z",
    "text": "Created from email"
   },
   {
-   "at": "2026-10-28T09:11:42Z",
+   "at": "2026-10-28T10:13:32Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-28T09:31:42Z",
+   "at": "2026-10-28T10:33:32Z",
    "text": "Assigned to Omar Haddad"
   },
   {
-   "at": "2026-10-28T13:01:42Z",
+   "at": "2026-10-28T14:03:32Z",
    "text": "Omar is on a bridge call with AMC"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

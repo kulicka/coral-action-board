@@ -71,7 +71,8 @@ SELECT * FROM dbo.v_needs_attention ORDER BY sla_state, priority;
 - Each task has exactly one accountable owner. Unassigned tasks wait in a team queue.
 - Workflow: Triage, Queued (accepted and waiting to be picked up), In progress, In development, Ready for testing, Ready to publish, Done.
 - Every task can carry a **product module** (Operations, Finance, TVOD, International, Reporting, Platform) and a **release**: a scheduled release such as 4.13, or Backlog for work that isn't due on any particular day.
-- SLA: support items (incident, bug, request, question) for outside clients run a first-response clock, then a resolution clock. The clock pauses while a task is waiting on the client. A client can override the default terms. All other items count down to their due date. Once a support item has had its first response, scheduling it into a release or the backlog replaces the resolution clock, so it tracks the release ship date instead.
+- SLA: support items (incident, bug, request, question) for outside clients run a response clock, then a fix clock. Targets come from each client's SLA terms by severity (Sev 1–4 = P1–P4), managed on the **Client SLAs** page. Clients without their own terms use the Coral standard. Targets in business hours or days count 8am–6pm ET, Monday to Friday, minus US federal holidays and the day after Thanksgiving. Targets marked 24/7 count around the clock. A fix can also be best efforts, promptly or next available update, which have no clock. The clock pauses while a task is waiting on the client. All other items count down to their due date. Once a support item has had its first response, scheduling it into a release or the backlog replaces the fix clock, so it tracks the release ship date instead.
+- The SLA terms were loaded from `Coral_MSP_Complete_SLA_Matrix.xlsx` (2026-10-28). Each client's terms are marked Contractual, Assumed (Fox, Paramount) or Not confirmed (Ole), as in the matrix.
 
 ## Planned
 

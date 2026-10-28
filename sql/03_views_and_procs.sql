@@ -1,10 +1,47 @@
 -- Coral MSP action board: views and procedures (SQL Server)
 -- Same SLA rules as the prototype: support types (incident, bug, request, question) for
--- outside clients run a first-response clock, then a resolution clock, both measured from
--- creation and minus time spent waiting on the client. Everything else uses its due date.
--- Once a support item has had its first response, scheduling it into a release or the
--- backlog replaces the resolution clock; the item then tracks its release ship date.
--- Wall-clock minutes for now; a business-hours calendar comes later.
+-- outside clients run a response clock, then a fix clock, both measured from creation and
+-- minus time spent waiting on the client. Targets come from the client's SLA terms
+-- (dbo.client_sla, or the Coral standard row) for the task's severity (= priority).
+-- Business-hour and business-day targets count only open hours on the business calendar;
+-- 'h' and 'd' targets count around the clock. Fixes marked best, prompt or next have no clock.
+-- Everything else uses its due date. Once a support item has had its first response,
+-- scheduling it into a release or the backlog replaces the fix clock.
+
+-- Business minutes between two UTC times on a calendar (open hours, minus weekends and holidays)
+CREATE OR ALTER FUNCTION dbo.fn_business_minutes (@calendar_id INT, @from DATETIME2(0), @to DATETIME2(0))
+RETURNS TABLE
+AS RETURN
+WITH days AS (
+    SELECT TOP (CASE WHEN @to > @from THEN DATEDIFF(DAY, @from, @to) + 3 ELSE 0 END)
+           DATEADD(DAY, CAST(ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS INT) - 2, CAST(@from AS DATE)) AS local_date
+    FROM sys.all_objects a CROSS JOIN sys.all_objects b
+), windows AS (
+    SELECT CAST(DATEADD(MINUTE, DATEDIFF(MINUTE, CAST('00:00' AS TIME(0)), c.day_start), CAST(d.local_date AS DATETIME2(0)))
+                AT TIME ZONE c.time_zone AT TIME ZONE 'UTC' AS DATETIME2(0)) AS open_utc,
+           CAST(DATEADD(MINUTE, DATEDIFF(MINUTE, CAST('00:00' AS TIME(0)), c.day_end), CAST(d.local_date AS DATETIME2(0)))
+                AT TIME ZONE c.time_zone AT TIME ZONE 'UTC' AS DATETIME2(0)) AS close_utc
+    FROM days d
+    JOIN dbo.business_calendar c ON c.calendar_id = @calendar_id
+    WHERE CHARINDEX(CAST(DATEDIFF(DAY, '19000101', d.local_date) % 7 + 1 AS CHAR(1)), c.open_weekdays) > 0   -- 1900-01-01 was a Monday
+      AND NOT EXISTS (SELECT 1 FROM dbo.business_holiday h WHERE h.calendar_id = @calendar_id AND h.holiday_date = d.local_date)
+)
+SELECT CAST(ISNULL(SUM(CASE WHEN x.e > x.s THEN DATEDIFF(SECOND, x.s, x.e) END), 0) / 60 AS INT) AS business_mins
+FROM (SELECT CASE WHEN open_utc  > @from THEN open_utc  ELSE @from END AS s,
+             CASE WHEN close_utc < @to   THEN close_utc ELSE @to   END AS e
+      FROM windows) x;
+GO
+
+-- The SLA terms that apply to a client: its own row, else the Coral standard
+CREATE OR ALTER FUNCTION dbo.fn_client_sla (@client_id INT)
+RETURNS TABLE
+AS RETURN
+SELECT TOP (1) cs.client_sla_id, cs.calendar_id, cs.verification,
+       CASE WHEN cs.client_id IS NULL THEN 0 ELSE 1 END AS is_client_terms
+FROM dbo.client_sla cs
+WHERE cs.client_id = @client_id OR cs.client_id IS NULL
+ORDER BY CASE WHEN cs.client_id IS NULL THEN 1 ELSE 0 END;
+GO
 
 CREATE OR ALTER VIEW dbo.v_task_card AS
 WITH base AS (
@@ -12,11 +49,18 @@ WITH base AS (
             c.name AS client_name, c.is_internal, pj.name AS project_name, pr.name AS product_name,
             p.person_code AS owner_code, p.display_name AS owner_name, tm.name AS queue_name,
             md.name AS module_name, rl.name AS release_name, rl.ship_date,
-            sp.first_response_mins, sp.resolution_mins, sp.is_override,
-            DATEDIFF(MINUTE, t.created_at, SYSUTCDATETIME())
-              - t.sla_paused_mins
-              - ISNULL(DATEDIFF(MINUTE, t.sla_paused_since, SYSUTCDATETIME()), 0) AS sla_elapsed_mins,
+            cs.is_client_terms, cs.verification, tm.term_value, tm.term_unit, tm.term_note,
+            CAST(CASE tm.term_unit WHEN 'bh' THEN tm.term_value * 60
+                                   WHEN 'bd' THEN tm.term_value * DATEDIFF(MINUTE, bc.day_start, bc.day_end)
+                                   WHEN 'h'  THEN tm.term_value * 60
+                                   WHEN 'd'  THEN tm.term_value * 1440 END AS INT) AS term_mins,
+            CASE WHEN tm.term_unit IN ('bh','bd')
+                 THEN bm_all.business_mins - t.sla_paused_business_mins - ISNULL(bm_paused.business_mins, 0)
+                 ELSE DATEDIFF(MINUTE, t.created_at, SYSUTCDATETIME())
+                      - t.sla_paused_mins
+                      - ISNULL(DATEDIFF(MINUTE, t.sla_paused_since, SYSUTCDATETIME()), 0) END AS sla_elapsed_mins,
             CASE WHEN t.task_type IN ('incident','bug','request','question') AND c.is_internal = 0
+                      AND sp.client_sla_id IS NOT NULL
                       AND NOT (t.first_response_at IS NOT NULL AND t.release_id IS NOT NULL)
                  THEN 1 ELSE 0 END AS has_support_sla
     FROM dbo.task t
@@ -27,22 +71,21 @@ WITH base AS (
     JOIN dbo.team    tm ON tm.team_id   = t.queue_team_id
     LEFT JOIN dbo.product_module  md ON md.module_id  = t.module_id
     LEFT JOIN dbo.product_release rl ON rl.release_id = t.release_id
-    OUTER APPLY (
-        SELECT TOP (1) x.first_response_mins, x.resolution_mins,
-               CASE WHEN x.client_id IS NULL THEN 0 ELSE 1 END AS is_override
-        FROM dbo.sla_policy x
-        WHERE x.priority = t.priority
-          AND (x.client_id = t.client_id OR (x.client_id IS NULL AND x.support_tier = c.support_tier))
-        ORDER BY CASE WHEN x.client_id IS NULL THEN 1 ELSE 0 END
-    ) sp
+    OUTER APPLY dbo.fn_client_sla(t.client_id) cs
+    LEFT JOIN dbo.sla_policy sp ON sp.client_sla_id = cs.client_sla_id AND sp.priority = t.priority
+    LEFT JOIN dbo.business_calendar bc ON bc.calendar_id = cs.calendar_id
+    CROSS APPLY (SELECT CASE WHEN t.first_response_at IS NULL THEN sp.response_value ELSE sp.fix_value END AS term_value,
+                        CASE WHEN t.first_response_at IS NULL THEN sp.response_unit  ELSE sp.fix_unit  END AS term_unit,
+                        CASE WHEN t.first_response_at IS NULL THEN sp.response_note  ELSE sp.fix_note  END AS term_note) tm
+    OUTER APPLY dbo.fn_business_minutes(cs.calendar_id, t.created_at, SYSUTCDATETIME()) bm_all
+    OUTER APPLY dbo.fn_business_minutes(cs.calendar_id, t.sla_paused_since, SYSUTCDATETIME()) bm_paused
 ), clocked AS (
     SELECT b.*,
            CASE WHEN b.has_support_sla = 1 AND b.first_response_at IS NULL THEN 'First response'
-                WHEN b.has_support_sla = 1 THEN 'Resolution'
+                WHEN b.has_support_sla = 1 THEN 'Fix'
                 WHEN b.due_date IS NOT NULL THEN 'Due date'
                 WHEN b.release_id IS NOT NULL THEN 'Scheduled' END AS sla_kind,
-           CASE WHEN b.has_support_sla = 1 AND b.first_response_at IS NULL THEN b.first_response_mins
-                WHEN b.has_support_sla = 1 THEN b.resolution_mins END AS sla_target_mins,
+           CASE WHEN b.has_support_sla = 1 THEN b.term_mins END AS sla_target_mins,
            DATEDIFF(MINUTE, SYSUTCDATETIME(), DATEADD(SECOND, 86399, CAST(b.due_date AS DATETIME2(0)))) AS due_left_mins
     FROM base b
 )
@@ -50,10 +93,12 @@ SELECT  task_id, task_key, title, task_type, source_system, priority, stage,
         client_name, product_name, module_name, project_name, release_name, ship_date, owner_code, owner_name, queue_name,
         CASE WHEN owner_person_id IS NULL THEN 1 ELSE 0 END AS is_unassigned,
         external_ref, due_date, created_at, first_response_at, resolved_at, updated_at,
-        sla_kind, sla_target_mins, sla_elapsed_mins,
+        sla_kind, term_value AS sla_term_value, term_unit AS sla_term_unit, term_note AS sla_term_note,
+        sla_target_mins, sla_elapsed_mins,
         CASE WHEN sla_target_mins IS NOT NULL THEN sla_target_mins - sla_elapsed_mins ELSE due_left_mins END AS sla_left_mins,
         CASE
             WHEN stage = 'done'                                   THEN 'none'
+            WHEN has_support_sla = 1 AND sla_target_mins IS NULL  THEN 'none'   -- best efforts, promptly or next update
             WHEN sla_target_mins IS NOT NULL AND sla_paused_since IS NOT NULL THEN 'paused'
             WHEN sla_target_mins IS NOT NULL AND sla_elapsed_mins >= sla_target_mins        THEN 'breach'
             WHEN sla_target_mins IS NOT NULL AND sla_elapsed_mins >= sla_target_mins * 0.75 THEN 'risk'
@@ -66,7 +111,10 @@ SELECT  task_id, task_key, title, task_type, source_system, priority, stage,
             WHEN release_id IS NOT NULL                           THEN 'sched'
             ELSE 'none'
         END AS sla_state,
-        CASE WHEN is_override = 1 THEN client_name + N' contract' ELSE N'standard' END AS sla_terms
+        CASE WHEN is_client_terms = 1 THEN client_name + CASE verification WHEN 'contract' THEN N' contract'
+                                                                  WHEN 'assumed'  THEN N' (assumed terms)'
+                                                                  ELSE N' (terms not confirmed)' END
+             ELSE N'Coral standard' END AS sla_terms
 FROM clocked;
 GO
 
@@ -194,9 +242,13 @@ BEGIN
     IF @waiting = 1
         UPDATE dbo.task SET sla_paused_since = SYSUTCDATETIME() WHERE task_id = @id AND sla_paused_since IS NULL;
     ELSE
-        UPDATE dbo.task SET sla_paused_mins = sla_paused_mins + DATEDIFF(MINUTE, sla_paused_since, SYSUTCDATETIME()),
-                            sla_paused_since = NULL
-        WHERE task_id = @id AND sla_paused_since IS NOT NULL;
+        UPDATE t SET sla_paused_mins = t.sla_paused_mins + DATEDIFF(MINUTE, t.sla_paused_since, SYSUTCDATETIME()),
+                     sla_paused_business_mins = t.sla_paused_business_mins + ISNULL(bm.business_mins, 0),
+                     sla_paused_since = NULL
+        FROM dbo.task t
+        OUTER APPLY dbo.fn_client_sla(t.client_id) cs
+        OUTER APPLY dbo.fn_business_minutes(cs.calendar_id, t.sla_paused_since, SYSUTCDATETIME()) bm
+        WHERE t.task_id = @id AND t.sla_paused_since IS NOT NULL;
     IF @@ROWCOUNT = 1
     BEGIN
         DECLARE @msg NVARCHAR(400) = CASE WHEN @waiting = 1 THEN N'Waiting on client, SLA clock paused'

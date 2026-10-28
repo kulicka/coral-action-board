@@ -15,7 +15,7 @@ const APP_HTML = process.env.APP_HTML || path.join(__dirname, '..', 'app', 'inde
 const SEED_DIR = path.join(__dirname, 'seed');
 const BOARD_USER = process.env.BOARD_USER || 'coral';
 const BOARD_PASSWORD = process.env.BOARD_PASSWORD || '';
-const COLLECTIONS = new Set(['tasks', 'people', 'views', 'config']);
+const COLLECTIONS = new Set(['tasks', 'people', 'views', 'config', 'sla']);
 const SEGMENT = /^[A-Za-z0-9_\-.~:@+]{1,200}$/;
 const MAX_BODY = 256 * 1024;
 
@@ -104,6 +104,30 @@ function migrateStages() {
   } catch (e) { db.exec('ROLLBACK'); throw e; }
 }
 migrateStages();
+
+// Client SLA terms (sla collection) and the business calendar were added after the first
+// deploys. Load them from the seed files once, and add any of their clients to the client list.
+function addSlaTerms() {
+  const cfg = readDoc('config', 'settings');
+  if (!cfg || q.list.all('sla').length || !fs.existsSync(SEED_DIR)) return;
+  const files = fs.readdirSync(SEED_DIR).filter(f => /^sla__[^/]+\.json$/.test(f));
+  const seedCfg = JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'config__settings.json'), 'utf8'));
+  db.exec('BEGIN');
+  try {
+    const clients = [...(cfg.data.clients || [])];
+    for (const f of files) {
+      const doc = JSON.parse(fs.readFileSync(path.join(SEED_DIR, f), 'utf8'));
+      q.upsert.run('sla', f.slice(5, -5), JSON.stringify(doc), nowIso());
+      if (doc.client !== '*' && !clients.includes(doc.client)) clients.splice(Math.max(0, clients.indexOf('Coral Technology')), 0, doc.client);
+    }
+    const next = { ...cfg.data, clients, calendar: cfg.data.calendar || seedCfg.calendar };
+    delete next.sla;
+    q.upsert.run('config', 'settings', JSON.stringify(next), nowIso());
+    db.exec('COMMIT');
+    console.log(`Loaded SLA terms for ${files.length - 1} clients and the standard`);
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+}
+addSlaTerms();
 
 // ---------- live updates (server-sent events) ----------
 const clients = new Set();

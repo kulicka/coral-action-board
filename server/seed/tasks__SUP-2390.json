@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2390",
+ "type": "incident",
+ "source": "portal",
+ "title": "Rights import job stalls on large catalogs",
+ "client": "Ole",
+ "project": null,
+ "priority": 2,
+ "owner": null,
+ "queue": "Support L2",
+ "stage": 0,
+ "createdAt": "2026-10-28T13:33:32Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "International",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Imports"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T13:33:32Z",
+   "text": "Created from support portal"
+  }
+ ],
+ "updatedAt": "2026-10-28T15:03:32Z"
+}

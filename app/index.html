@@ -224,7 +224,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 @media (min-width:901px) and (min-height:560px){
   main{height:100vh;height:100dvh;padding-bottom:12px}
   #board{flex:1 1 auto;min-height:240px;display:flex;flex-direction:column}
-  #board>.cols,#board>.lwrap{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+  #board>.cols,#board>.lwrap,#board>.slapage{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
   #board>.cols .colhd{position:sticky;top:0;z-index:2;background:var(--col);border-radius:12px 12px 0 0}
   #board>.lwrap .r.hd{position:sticky;top:0;z-index:2;background:var(--surface)}
 }
@@ -263,12 +263,45 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .live{display:inline-flex;align-items:center;gap:6px}
 .live i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
 .live.off i{background:var(--faint)}
+/* client SLA page */
+.slapage{display:grid;gap:18px;align-content:start}
+.slagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,430px),1fr));gap:14px}
+.slac{background:var(--col);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start}
+.slac.std{border-style:dashed}
+.slac header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.slac h3{margin:0;font-size:16px;font-weight:500}
+.slac .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.vb{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:1px 7px;border-radius:999px;white-space:nowrap;color:var(--vc);background:color-mix(in srgb,var(--vc) 14%,transparent)}
+.kv{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--muted)}
+.kv b{color:var(--fg);font-weight:500}
+.sevt{width:100%;border-collapse:collapse;font-size:12.5px}
+.sevt th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500;text-align:left;padding:0 8px 6px 0}
+.sevt td{border-top:1px solid var(--line);padding:7px 8px 7px 0;vertical-align:top}
+.sevt td:first-child{white-space:nowrap;color:var(--muted)}
+.sevt small{display:block;color:var(--faint);font-size:11px}
+.sevt .z{color:var(--faint)}
+.slac details summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.slac dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:10px 0 0;font-size:12px}
+.slac dt{color:var(--faint)}
+.slac dd{margin:0}
+.slac footer{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--faint)}
+.slainfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.slainfo section{border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:12.5px;color:var(--muted)}
+.slainfo h3{margin:0 0 8px;font-size:13px;font-weight:500;color:var(--fg)}
+.slainfo ul{margin:0;padding-left:18px;display:grid;gap:3px}
+#slaForm{width:min(560px,100%)}
+.sevedit{display:grid;grid-template-columns:52px 1fr 1fr;gap:8px 10px;align-items:center}
+.sevedit .h{font-size:12px;color:var(--muted)}
+.sevedit .tm{display:grid;grid-template-columns:58px 1fr;gap:6px}
+.sevedit input,.sevedit select{background:var(--bg);border:1px solid var(--line-strong);border-radius:8px;color:var(--fg);font:inherit;font-size:12.5px;padding:6px 8px;width:100%;min-width:0}
+.sevedit input:disabled{opacity:.35}
 </style>
 
 <div class="shell">
   <aside class="rail">
     <div class="brand"><span class="mark" aria-hidden="true"></span><div><b>Action Board</b><small>Coral MSP</small></div></div>
     <div><h5>Views</h5><nav class="nav views" id="navViews"></nav></div>
+    <div class="sec-c"><h5>Setup</h5><nav class="nav" id="navSetup"></nav></div>
     <div class="sec-c"><h5>Saved views</h5><nav class="nav" id="navSaved"></nav></div>
     <div class="sec-c"><h5>Clients</h5><nav class="nav" id="navClients"></nav></div>
     <div class="sec-t"><h5>Teams</h5><nav class="nav" id="navTeams"></nav></div>
@@ -297,7 +330,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
     <div class="chips" id="chips"></div>
     <div class="stats" id="stats"></div>
     <div id="board"><div class="state"><b>Loading the board</b>Connecting to the shared task database.</div></div>
-    <div class="foot-note"><span class="live off" id="live"><i></i>Connecting</span><span>Changes save to a shared database, so everyone who opens this board sees them. SLA clocks use wall-clock time for now.</span></div>
+    <div class="foot-note"><span class="live off" id="live"><i></i>Connecting</span><span>Changes save to a shared database, so everyone who opens this board sees them. SLA clocks follow each client's terms on the Client SLAs page.</span></div>
   </main>
 </div>
 <div class="pop" id="pop" hidden role="menu"></div>
@@ -328,6 +361,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
     <div class="dfoot"><button class="ghost" type="button" id="fCancel">Cancel</button><button class="btn-new" type="submit" id="fSubmit">Create task</button></div>
   </form>
 </div>
+<div id="slaWrap" hidden><div class="scrim" data-act="slaclose"></div><form class="drawer" id="slaForm" novalidate></form></div>
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
@@ -356,6 +390,7 @@ const I = {
   done:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="m4.6 7.2 1.7 1.7 3.2-3.4"/></svg>',
   flag:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M3 12.5V2M3 2.5h7.5l-1.5 2.5 1.5 2.5H3"/></svg>',
   cal:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.8" y="2.8" width="10.4" height="9.4" rx="1.3"/><path d="M1.8 5.8h10.4M4.6 1.5v2.6M9.4 1.5v2.6"/></svg>',
+  shield:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M7 1.5 12 3.3v3.6c0 2.6-2 4.6-5 5.6-3-1-5-3-5-5.6V3.3z"/><path d="m4.9 7 1.5 1.5 2.8-3" stroke-linecap="round"/></svg>',
   star:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="m7 1.8 1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 10l-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z"/></svg>',
 };
 const TYPE = {incident:'Incident',bug:'Bug',feature:'Feature',request:'Request',question:'Question',internal:'Internal task',change:'Change request'};
@@ -374,10 +409,20 @@ const DEF_CFG = {
   teams:['Support L1','Support L2','Development','Platform','QA','Product'],
   modules:['Operations','Finance','TVOD','International','Reporting','Platform'],
   releases:[],
-  sla:{default:{1:{fr:60,res:240},2:{fr:240,res:4320},3:{fr:480,res:7200},4:{fr:480,res:7200}},overrides:{}},
+  // Business calendar for SLA clocks in business hours or days: 8am-6pm ET, Mon-Fri, US federal holidays and the day after Thanksgiving off
+  calendar:{tz:'America/New_York', tzLabel:'ET', start:8, end:18, days:[1,2,3,4,5], holidays:[
+    '2026-01-01','2026-01-19','2026-02-16','2026-05-25','2026-06-19','2026-07-03','2026-09-07','2026-10-12','2026-11-11','2026-11-26','2026-11-27','2026-12-25',
+    '2027-01-01','2027-01-18','2027-02-15','2027-05-31','2027-06-18','2027-07-05','2027-09-06','2027-10-11','2027-11-11','2027-11-25','2027-11-26','2027-12-24']},
 };
+// SLA terms: a response and a fix target per severity (Sev 1-4 = P1-P4). Business units follow CFG.calendar; h and d run around the clock.
+const UNITS = {bh:['business hour','business hours'], bd:['business day','business days'], h:['hour, 24/7','hours, 24/7'], d:['calendar day','calendar days']};
+const FIXKINDS = {best:'Best efforts, no deadline', prompt:'Promptly, no deadline', next:'Next available update'};
+const VERIF = {contract:['Contractual','var(--ok)'], assumed:['Assumed','var(--warn)'], unconfirmed:['Not confirmed','var(--warn)'], standard:['Coral standard','var(--accent)']};
+const SEVDEF = {1:'Completely unavailable, or catastrophic loss of data', 2:'Available, but critical business functionality not working', 3:'Faulty, with a workaround available', 4:'No immediate or significant operational impact'};
+const STD_TERMS = {id:'_standard', client:'*', label:'Coral standard', verification:'standard', basis:'Coral standard operational SLA', hours:'8am–6pm ET, Mon–Fri; holidays excluded',
+  sev:{1:{resp:{n:2,u:'bh'},fix:{n:24,u:'h'}}, 2:{resp:{n:4,u:'bh'},fix:{n:2,u:'bd'}}, 3:{resp:{n:8,u:'bh'},fix:{n:10,u:'bd'}}, 4:{resp:{n:2,u:'bd'},fix:{u:'next'}}}};
 
-let CFG = DEF_CFG, PEOPLE = {}, TASKS = [], SAVED = {};
+let CFG = DEF_CFG, PEOPLE = {}, TASKS = [], SAVED = {}, TERMS = {};
 let DB = null, WRITE = null, LOADED = {tasks:false}, OFFLINE = false;
 const S = {view:'all', layout:'short', group:'stage', sort:'prio', q:'', quick:null, filters:{}, open:new Set(), fresh:null, me:null};
 try { S.me = localStorage.getItem('board.as'); } catch(e) {}
@@ -398,20 +443,52 @@ function planned(t, now){
   const start = Date.parse(t.createdAt), used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
   return {s:'sched',left,label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
 }
+/* business-hours clock */
+const TZF = {};
+function tzOff(ms, tz){ // local wall time minus UTC, in ms
+  const f = TZF[tz] || (TZF[tz] = new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'}));
+  const p = {}; f.formatToParts(new Date(ms)).forEach(x=>p[x.type]=x.value);
+  return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour%24,+p.minute) - Math.floor(ms/60000)*60000;
+}
+const localToUtc = (wall, tz) => wall - tzOff(wall - tzOff(wall, tz), tz);
+function bizMins(a, b, cal=CFG.calendar){
+  if(!(b>a)) return 0;
+  let total = 0, day = a + tzOff(a, cal.tz); day -= day % 86400000;
+  for(let i=0; i<800; i++, day+=86400000){
+    const s = localToUtc(day + cal.start*3600000, cal.tz); if(s>=b) break;
+    const d = new Date(day); if(!cal.days.includes(d.getUTCDay()) || (cal.holidays||[]).includes(d.toISOString().slice(0,10))) continue;
+    total += Math.max(0, Math.min(b, localToUtc(day + cal.end*3600000, cal.tz)) - Math.max(a, s));
+  }
+  return total/60000;
+}
+const bizDay = () => (CFG.calendar.end-CFG.calendar.start)*60;
+const termMins = x => x && UNITS[x.u] && +x.n>0 ? +x.n * {bh:60, bd:bizDay(), h:60, d:1440}[x.u] : null;
+const isBiz = x => !!x && (x.u==='bh' || x.u==='bd');
+const termText = x => !x || !x.u ? 'Not set' : FIXKINDS[x.u] || (UNITS[x.u] ? `${x.n} ${UNITS[x.u][+x.n===1?0:1]}` : 'Not set');
+function fmtBiz(m){ const d = bizDay(); m = Math.max(0, Math.round(m)); if(m<d) return fmtDur(m)+' business'; const n=Math.floor(m/d), h=Math.floor((m%d)/60); return `${n} business day${n>1?'s':''}${h?' '+h+'h':''}`; }
+const termsFor = client => Object.values(TERMS).find(p=>p.client===client) || TERMS._standard || STD_TERMS;
+const termsName = p => p.client==='*' ? 'Coral standard' : p.client + (p.verification==='contract' ? ' contract' : p.verification==='assumed' ? ' (assumed terms)' : ' (terms not confirmed)');
+
 function slaOf(t, now){
   if(t.stage===DONE) return {s:'none',label:'Done '+ago(t.resolvedAt||t.updatedAt),used:0,kind:'None',target:''};
   if(SUPPORT.includes(t.type) && t.client!=='Coral Technology'){
-    const ov = CFG.sla?.overrides?.[t.client]?.[t.priority]; const pol = ov || CFG.sla?.default?.[t.priority];
-    // Once the client has a first response, scheduling the fix into a release or the backlog replaces the resolution clock
-    if(pol && !(t.firstResponseAt && t.release)){
-      const pausedNow = t.pausedSince ? mins(now-Date.parse(t.pausedSince)) : 0;
-      const elapsed = mins(now-Date.parse(t.createdAt)) - (t.pausedMins||0) - pausedNow;
-      const first = !t.firstResponseAt, target = first?pol.fr:pol.res, left = target-elapsed;
-      const used = Math.min(100, Math.max(0, elapsed/target*100));
-      const kind = first?'First response':'Resolution', tg = `${fmtDur(target)} · ${ov?t.client+' contract':'standard'}, P${t.priority}`;
-      if(t.pausedSince) return {s:'paused',label:'Paused · waiting on client',used,kind,target:tg};
-      if(left<=0) return {s:'breach',left,label:`Breached ${fmtDur(-left)} ago`,used:100,kind,target:tg};
-      return {s:used>=75?'risk':'ok',left,label:`${fmtDur(left)} to ${first?'first response':'resolve'}`,used,kind,target:tg};
+    const pol = termsFor(t.client), sev = pol.sev?.[t.priority];
+    // Once the client has a first response, scheduling the fix into a release or the backlog replaces the fix clock
+    if(sev && !(t.firstResponseAt && t.release)){
+      const first = !t.firstResponseAt, term = first ? sev.resp : sev.fix, kind = first ? 'First response' : 'Fix';
+      const tg = `${termText(term)} · ${termsName(pol)}, Sev ${t.priority}`;
+      if(term && FIXKINDS[term.u]) return {s:'none',label:FIXKINDS[term.u],used:0,kind,target:tg};
+      const target = termMins(term);
+      if(target){
+        const biz = isBiz(term), since = Date.parse(t.createdAt), ps = t.pausedSince ? Date.parse(t.pausedSince) : null;
+        const elapsed = biz ? bizMins(since, now) - (t.pausedBizMins||0) - (ps ? bizMins(ps, now) : 0)
+                            : mins(now-since) - (t.pausedMins||0) - (ps ? mins(now-ps) : 0);
+        const left = target-elapsed, used = Math.min(100, Math.max(0, elapsed/target*100)), fd = biz ? fmtBiz : fmtDur;
+        if(t.pausedSince) return {s:'paused',label:'Paused · waiting on client',used,kind,target:tg};
+        if(left<=0) return {s:'breach',left,label:`Breached · over by ${fd(-left)}`,used:100,kind,target:tg};
+        const off = biz && bizMins(now, now+60000) === 0;
+        return {s:used>=75?'risk':'ok',left,label:`${fd(left)} to ${first?'respond':'fix'}${off?' · off hours':''}`,used,kind,target:tg};
+      }
     }
   }
   if(t.due){
@@ -460,9 +537,12 @@ const VIEWS = {
   planned:{title:'Backlog and releases',desc:'Work that is scheduled into a release or parked in the backlog, grouped by release.',icon:'cal',group:'release',layout:'ledger',quick:'planned',sort:'prio'},
   done:{title:'Recently done',desc:'Finished work, newest first.',icon:'done',group:'client',layout:'ledger',sort:'newest',done:true},
 };
+const PAGES = {sla:{title:'Client SLAs',desc:'Response and fix targets for each client, by severity. Support tickets (incidents, bugs, requests and questions) run on these clocks; P1–P4 is Sev 1–4.',icon:'shield'}};
 const viewDef = v => v.startsWith('sv-') ? SAVED[v.slice(3)] : VIEWS[v];
+const onPage = () => !!PAGES[S.view];
 
 function applyView(v){
+  if(PAGES[v]){ S.view=v; S.quick=null; S.filters={}; S.open.clear(); render(); return; }
   let d = viewDef(v);
   if(!d && v.startsWith('sv-') && !LOADED.views){ S.view=v; d=VIEWS.all; }
   else if(!d){ v='all'; d=VIEWS.all; }
@@ -617,7 +697,9 @@ function renderBoard(){
 }
 
 function renderChrome(){
-  const v = viewDef(S.view) || VIEWS.all;
+  const v = PAGES[S.view] || viewDef(S.view) || VIEWS.all;
+  document.querySelector('.tb').hidden = onPage();
+  document.getElementById('navSetup').innerHTML = Object.entries(PAGES).map(([k,d])=>`<button type="button" data-view="${k}" aria-current="${k===S.view}">${I[d.icon]}${d.title}<span class="n">${Object.keys(TERMS).length||''}</span></button>`).join('');
   document.getElementById('vTitle').textContent = v.title || v.name;
   document.getElementById('vDesc').textContent = v.desc || 'Saved view';
   const open = ALL.filter(t=>t.stage<DONE);
@@ -639,7 +721,7 @@ function renderChrome(){
   document.getElementById('sortBtn').innerHTML = `${SORTS[S.sort]} ${I.down}`;
   document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.v===S.layout)));
   document.getElementById('newBtn').hidden = !canW();
-  document.getElementById('saveViewBtn').hidden = !canW();
+  document.getElementById('saveViewBtn').hidden = !canW() || onPage();
 
   const chips = [];
   if(S.quick) chips.push(`<span class="fchip"><span>View rule</span>${QUICK[S.quick].label}<button type="button" data-rmquick aria-label="Remove">${I.x}</button></span>`);
@@ -651,7 +733,7 @@ function renderChrome(){
   const st = [['all','Open',null,vis.length],['un','Unassigned','var(--warn)',vis.filter(t=>!t.owner).length],
     ['risk','At risk','var(--warn)',vis.filter(t=>t.sla.s==='risk').length],['breach','Breached','var(--crit)',vis.filter(t=>t.sla.s==='breach').length],
     ['paused','Waiting on client','var(--muted)',vis.filter(t=>t.sla.s==='paused').length]];
-  document.getElementById('stats').innerHTML = showDone()||!LOADED.tasks ? '' : st.map(([k,l,c,n])=>{
+  document.getElementById('stats').innerHTML = showDone()||onPage()||!LOADED.tasks ? '' : st.map(([k,l,c,n])=>{
     const on = k==='un'?(ownSet&&ownSet.has('Unassigned')&&ownSet.size===1):(k!=='all'&&slaSet&&slaSet.size===1&&slaSet.has(SLAN[k]));
     return `<button class="stat${on?' on':''}" type="button" data-stat="${k}" ${c?`style="--sc:${c}"`:''}><b>${n}</b><span>${l}</span></button>`;}).join('');
 
@@ -672,8 +754,119 @@ function render(){
   if(S.me && !PEOPLE[S.me] && Object.keys(PEOPLE).length) S.me = null;
   if(!S.me && PEOPLE.JR) S.me = 'JR';
   if(!S.me && Object.keys(PEOPLE).length) S.me = Object.keys(PEOPLE)[0];
-  renderChrome(); renderBoard();
+  renderChrome(); onPage() ? renderSla() : renderBoard();
 }
+
+/* ---------- client SLA page ---------- */
+const hr12 = h => `${h%12||12}${h<12?'am':'pm'}`;
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const termCell = x => `${x&&x.u?esc(termText(x)):'<span class="z">Not set</span>'}${x&&x.note?`<small>${esc(x.note)}</small>`:''}`;
+function termsList(){
+  const own = Object.values(TERMS).filter(p=>p.client!=='*');
+  const order = c => { const i = CFG.clients.indexOf(c); return i<0 ? 999 : i; };
+  return [...own.sort((a,b)=>order(a.client)-order(b.client)||a.client.localeCompare(b.client)), TERMS._standard || STD_TERMS];
+}
+function slaCard(p){
+  const std = p.client==='*', v = VERIF[p.verification] || VERIF.unconfirmed;
+  const mine = ALL.filter(t=>t.stage<DONE && SUPPORT.includes(t.type) && t.client!=='Coral Technology' && (std ? termsFor(t.client)===p : t.client===p.client));
+  const br = mine.filter(t=>t.sla.s==='breach').length, rk = mine.filter(t=>t.sla.s==='risk').length;
+  const usedBy = std ? CFG.clients.filter(c=>c!=='Coral Technology' && termsFor(c)===p) : [];
+  const more = [['After hours',p.afterHours],['RTO',p.rto],['RPO',p.rpo],['Hourly backups',p.hourlyBackups],['Daily backups',p.dailyBackups],['Restore target',p.restore],['Service credits',p.credits],['Special terms',p.special],['Source',p.source]].filter(([,x])=>x);
+  return `<article class="slac${std?' std':''}">
+    <header><div><h3>${std?'Coral standard':esc(p.client)}</h3><div class="sub">${std?(usedBy.length?'Used by '+usedBy.map(esc).join(', '):'Used by clients without their own terms'):[p.label,p.deployment,p.basis].filter(Boolean).map(esc).join(' · ')}</div></div><span class="vb" style="--vc:${v[1]}">${v[0]}</span></header>
+    <div class="kv">${p.uptime?`<span>Uptime <b>${esc(p.uptime)}</b></span>`:''}${p.hours?`<span>Support <b>${esc(p.hours)}</b></span>`:''}<span>Open tickets <b>${mine.length}</b>${br?` · <b style="color:var(--crit)">${br} breached</b>`:''}${rk?` · <b style="color:var(--warn)">${rk} at risk</b>`:''}</span></div>
+    <table class="sevt"><thead><tr><th>Severity</th><th>Response</th><th>Fix or workaround</th></tr></thead><tbody>
+      ${[1,2,3,4].map(n=>`<tr><td>Sev ${n} · P${n}</td><td>${termCell(p.sev?.[n]?.resp)}</td><td>${termCell(p.sev?.[n]?.fix)}</td></tr>`).join('')}
+    </tbody></table>
+    ${more.length?`<details><summary>Contract details</summary><dl>${more.map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl></details>`:''}
+    <footer><span>${p.updatedAt?`Updated ${ago(p.updatedAt)}${p.updatedBy?' by '+esc(p.updatedBy):''}`:''}</span>${canW()?`<button class="btn" type="button" data-act="slaedit" data-id="${esc(p.id)}">Edit terms</button>`:''}</footer>
+  </article>`;
+}
+function renderSla(){
+  const b = document.getElementById('board'), cal = CFG.calendar;
+  if(OFFLINE){ b.innerHTML = `<div class="state"><b>The shared database isn't available here</b>Open this board on claude.ai while signed in to see client SLAs.</div>`; return; }
+  const without = CFG.clients.filter(c=>c!=='Coral Technology' && !Object.values(TERMS).some(p=>p.client===c));
+  const days = cal.days.length===5 && cal.days.join()==='1,2,3,4,5' ? 'Monday to Friday' : cal.days.map(d=>DOW[d]).join(', ');
+  const upcoming = (cal.holidays||[]).filter(d=>d>=new Date().toISOString().slice(0,10)).slice(0,6);
+  b.innerHTML = `<div class="slapage">
+    <div class="slagrid">${termsList().map(slaCard).join('')}</div>
+    ${canW()&&without.length?`<div><button class="fbtn" type="button" data-act="slanew">Add terms for ${without.length===1?esc(without[0]):'another client'}</button></div>`:''}
+    <div class="slainfo">
+      <section><h3>Severity</h3><ul>${[1,2,3,4].map(n=>`<li><b style="color:var(--fg);font-weight:500">Sev ${n} (P${n})</b>: ${SEVDEF[n]}</li>`).join('')}</ul></section>
+      <section><h3>How the clocks run</h3><ul>
+        <li>Response means acknowledging the ticket and setting a provisional severity. Use “Log first response” on the card.</li>
+        <li>Business hours and days count ${hr12(cal.start)}–${hr12(cal.end)} ${esc(cal.tzLabel)}, ${days}, minus holidays. Hours marked 24/7 count around the clock.</li>
+        <li>The clock stops while a ticket is waiting on the client. Once a fix is scheduled into a release or the backlog, the release date replaces the fix clock.</li>
+        <li>Upcoming holidays: ${upcoming.map(fmtDate).join(', ')||'none listed'}.</li></ul></section>
+    </div>
+  </div>`;
+}
+const slaWrap = document.getElementById('slaWrap'), slaForm = document.getElementById('slaForm');
+let slaEditing = null;
+const UNIT_SHORT = {bh:'business hrs', bd:'business days', h:'hours, 24/7', d:'calendar days', best:'Best efforts', prompt:'Promptly', next:'Next update'};
+const unitOpts = (sel, fix) => Object.keys(fix ? UNIT_SHORT : UNITS).map(k=>`<option value="${k}"${k===sel?' selected':''}>${UNIT_SHORT[k]}</option>`).join('');
+function openSla(p){
+  if(!canW()) return;
+  slaEditing = p || null;
+  const std = p && p.client==='*', x = p || {sev:{}};
+  const free = CFG.clients.filter(c=>c!=='Coral Technology' && !Object.values(TERMS).some(q=>q.client===c));
+  const base = p || TERMS._standard || STD_TERMS;
+  const inp = (id, label, val, ph) => `<div class="field"><label for="${id}">${label}</label><input id="${id}" value="${esc(val||'')}" placeholder="${esc(ph||'')}" maxlength="400"></div>`;
+  const tm = (n, k, t, fix) => `<div class="tm"><input type="number" min="0" step="0.5" id="s${k}${n}" value="${t&&!FIXKINDS[t.u]&&t.n!=null?esc(t.n):''}"${t&&FIXKINDS[t.u]?' disabled':''} aria-label="Sev ${n} ${k==='r'?'response':'fix'} amount"><select id="s${k}u${n}" data-unitfor="s${k}${n}" aria-label="Sev ${n} ${k==='r'?'response':'fix'} unit">${unitOpts(t?.u||'bh', fix)}</select></div>`;
+  slaForm.innerHTML = `
+    <div><h2>${std?'Coral standard terms':p?esc(p.client)+' SLA':'Add client SLA'}</h2><p>${std?'Every client without its own terms uses these.':'Support tickets for this client use these clocks. Open tickets update right away.'}</p></div>
+    ${p?'':`<div class="field"><label for="sClient">Client</label><select id="sClient">${opts(free)}</select></div>`}
+    ${std?'':`<div class="two"><div class="field"><label for="sDeploy">Deployment</label><select id="sDeploy">${opts(['Coral-hosted','Customer-hosted'], x.deployment||'Coral-hosted')}</select></div>
+      <div class="field"><label for="sVerif">Status of these terms</label><select id="sVerif">${['contract','assumed','unconfirmed'].map(k=>`<option value="${k}"${k===(x.verification||'contract')?' selected':''}>${VERIF[k][0]}</option>`).join('')}</select></div></div>
+    ${inp('sBasis','Where the terms come from',x.basis,'e.g. Executed MSA Exhibit A')}`}
+    <div class="field"><label>Targets by severity</label><div class="sevedit"><span></span><span class="h">Response</span><span class="h">Fix or workaround</span>
+      ${[1,2,3,4].map(n=>`<span class="h">Sev ${n}</span>${tm(n,'r',base.sev?.[n]?.resp,false)}${tm(n,'f',base.sev?.[n]?.fix,true)}`).join('')}</div></div>
+    <div class="two">${inp('sUptime','Monthly uptime',x.uptime,'99.5%')}${inp('sHours','Support hours',x.hours||base.hours,'8am–6pm ET, Mon–Fri')}</div>
+    ${std?'':`${inp('sAfter','After-hours support',x.afterHours)}
+    <div class="two">${inp('sRto','RTO',x.rto)}${inp('sRpo','RPO',x.rpo)}</div>
+    <div class="two">${inp('sHourly','Hourly backups kept',x.hourlyBackups)}${inp('sDaily','Daily backups kept',x.dailyBackups)}</div>
+    ${inp('sRestore','Restore target',x.restore)}${inp('sCredits','Service credits',x.credits)}
+    <div class="field"><label for="sSpecial">Special terms and exceptions</label><textarea id="sSpecial" maxlength="2000">${esc(x.special||'')}</textarea></div>
+    ${inp('sSource','Source documents',x.source)}`}
+    <p class="err" id="sErr" hidden></p>
+    <div class="dfoot">${p&&!std?'<button class="ghost" type="button" data-act="sladel" style="margin-right:auto">Remove terms</button>':''}<button class="ghost" type="button" data-act="slaclose">Cancel</button><button class="btn-new" type="submit">${p?'Save terms':'Add terms'}</button></div>`;
+  slaWrap.hidden = false;
+}
+const closeSla = () => { slaWrap.hidden = true; slaEditing = null; };
+slaForm.addEventListener('change', e=>{ const u=e.target.dataset.unitfor; if(u){ const n=document.getElementById(u); n.disabled = !!FIXKINDS[e.target.value]; } });
+slaForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const v = id => { const el=document.getElementById(id); return el ? el.value.trim() : undefined; };
+  const err = document.getElementById('sErr'), p = slaEditing, std = p && p.client==='*';
+  const client = p ? p.client : v('sClient');
+  if(!client){ err.textContent='Pick a client.'; err.hidden=false; return; }
+  const sev = {};
+  for(const n of [1,2,3,4]){
+    sev[n] = {};
+    for(const [k,f] of [['r','resp'],['f','fix']]){
+      const u = v(`s${k}u${n}`), num = +v(`s${k}${n}`), old = p?.sev?.[n]?.[f];
+      if(!FIXKINDS[u] && !(num>0)){ err.textContent=`Sev ${n} ${f==='resp'?'response':'fix'} needs an amount above zero.`; err.hidden=false; document.getElementById(`s${k}${n}`).focus(); return; }
+      const t = FIXKINDS[u] ? {u} : {n:num, u};
+      if(old && old.note && old.u===t.u && (old.n??null)===(t.n??null)) t.note = old.note;
+      sev[n][f] = t;
+    }
+  }
+  const doc = {...(p||{}), client, sev, uptime:v('sUptime'), hours:v('sHours'), updatedAt:nowIso(), updatedBy:S.me?personName(S.me):null};
+  if(!std) Object.assign(doc, {deployment:v('sDeploy'), verification:v('sVerif'), basis:v('sBasis'), afterHours:v('sAfter'), rto:v('sRto'), rpo:v('sRpo'),
+    hourlyBackups:v('sHourly'), dailyBackups:v('sDaily'), restore:v('sRestore'), credits:v('sCredits'), special:v('sSpecial'), source:v('sSource')});
+  if(std) Object.assign(doc, {verification:'standard'});
+  const id = p ? p.id : client.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'client';
+  delete doc.id; closeSla();
+  write('sla/'+id, ()=>DB.doc('sla/'+id).set(doc).then(()=>toast(`Saved SLA terms for ${std?'the Coral standard':client}`)));
+});
+slaWrap.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  if(b.dataset.act==='slaclose') closeSla();
+  if(b.dataset.act==='sladel'){
+    if(b.dataset.armed){ const p=slaEditing; closeSla(); write('sla/'+p.id, ()=>DB.doc('sla/'+p.id).delete().then(()=>toast(`${p.client} now uses the Coral standard terms`))); }
+    else { b.dataset.armed='1'; b.textContent='Click again to remove'; b.style.color='var(--crit)'; }
+  }
+});
 
 /* ---------- popover ---------- */
 const pop = document.getElementById('pop'); let popFor = null;
@@ -738,8 +931,10 @@ document.addEventListener('click', e=>{
     return;
   }
   const d = el.dataset;
+  if(d.act==='slaedit'){ const p = TERMS[d.id] || (d.id==='_standard'?STD_TERMS:null); if(p) openSla(p); return; }
+  if(d.act==='slanew'){ openSla(null); return; }
   if(d.view){ location.hash = d.view; if(location.hash.slice(1)===S.view) applyView(d.view); return; }
-  if(d.nav){ const cur=S.filters[d.nav]; const on=cur&&cur.size===1&&cur.has(d.val); S.filters[d.nav]=on?new Set():new Set([d.val]); render(); return; }
+  if(d.nav){ if(onPage()){ history.replaceState(null,'','#all'); applyView('all'); } const cur=S.filters[d.nav]; const on=cur&&cur.size===1&&cur.has(d.val); S.filters[d.nav]=on?new Set():new Set([d.val]); render(); return; }
   if(d.filter){ openPop(el, filterMenu(d.filter), 'f-'+d.filter); return; }
   if(d.fk){ const s=S.filters[d.fk]||(S.filters[d.fk]=new Set()); s.has(d.fv)?s.delete(d.fv):s.add(d.fv); render(); pop.innerHTML=filterMenu(d.fk); return; }
   if(el.id==='groupBtn'){ openPop(el, '<h6>Group by</h6>'+GROUP_KEYS.map(k=>`<button class="opt${k===S.group?' sel':''}" type="button" data-group="${k}">${FIELDS[k].label}</button>`).join(''), 'group'); return; }
@@ -771,7 +966,7 @@ document.addEventListener('click', e=>{
     case 'stage': openPop(el, stageMenu(t), 's-'+t.key); return;
     case 'respond': patch(t, {firstResponseAt:nowIso()}, `First response sent by ${meName()}`, `${t.key}: first response logged, resolution clock running`); return;
     case 'wait':
-      if(t.pausedSince) patch(t, {pausedSince:null, pausedMins:Math.round((t.pausedMins||0)+mins(Date.now()-Date.parse(t.pausedSince)))}, 'Client replied, SLA clock running again', `${t.key}: SLA clock running again`);
+      if(t.pausedSince) patch(t, {pausedSince:null, pausedMins:Math.round((t.pausedMins||0)+mins(Date.now()-Date.parse(t.pausedSince))), pausedBizMins:Math.round((t.pausedBizMins||0)+bizMins(Date.parse(t.pausedSince), Date.now()))}, 'Client replied, SLA clock running again', `${t.key}: SLA clock running again`);
       else patch(t, {pausedSince:nowIso()}, `Waiting on client (set by ${meName()})`, `${t.key}: SLA clock paused while waiting on the client`);
       return;
     case 'dev': { const n = 4430 + ALL.filter(x=>x.link&&x.link.startsWith('Jira')).length;
@@ -797,7 +992,7 @@ pop.addEventListener('submit', e=>{
   write('views/'+id, ()=>DB.doc('views/'+id).set(doc).then(()=>{ toast(`Saved “${name}”`); location.hash='sv-'+id; }));
 });
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ closePop(); closeDrawer(); }
+  if(e.key==='Escape'){ closePop(); closeDrawer(); closeSla(); }
   const r = e.target.closest && e.target.closest('.r[data-act="row"]');
   if(r && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); r.click(); }
 });
@@ -877,7 +1072,8 @@ setInterval(()=>{ if(LOADED.tasks) render(); }, 60000);
   const fail = e => { if(e && e.code==='revoked'){ OFFLINE=true; } render(); };
   db.collection('tasks').onSnapshot(snap=>{ TASKS = snap.docs.filter(d=>d.exists).map(d=>({...d.data(), key:d.id})); LOADED.tasks=true; render(); }, fail);
   db.collection('people').onSnapshot(snap=>{ const p={}; snap.docs.forEach(d=>{ if(d.exists) p[d.id]=d.data(); }); PEOPLE=p; render(); }, fail);
+  db.collection('sla').onSnapshot(snap=>{ const v={}; snap.docs.forEach(d=>{ if(d.exists) v[d.id]={...d.data(), id:d.id}; }); TERMS=v; render(); }, fail);
   db.collection('views').onSnapshot(snap=>{ const v={}; snap.docs.forEach(d=>{ if(d.exists) v[d.id]=d.data(); }); SAVED=v; if(S.view.startsWith('sv-')&&LOADED.views!==true) applyView(S.view); LOADED.views=true; render(); }, fail);
-  db.doc('config/settings').onSnapshot(snap=>{ if(snap.exists){ const c=snap.data(); CFG={...DEF_CFG,...c, sla:{...DEF_CFG.sla,...(c.sla||{})}}; } render(); }, fail);
+  db.doc('config/settings').onSnapshot(snap=>{ if(snap.exists){ const c=snap.data(); CFG={...DEF_CFG,...c, calendar:{...DEF_CFG.calendar,...(c.calendar||{})}}; } render(); }, fail);
 })();
 </script>
