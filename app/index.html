@@ -141,7 +141,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .detail{display:grid;gap:12px}
 .card.short .detail{border-top:1px solid var(--line);padding-top:12px}
 .stages{display:grid;gap:5px}
-.stages .bar{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.stages .bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
 .stages .bar i{height:4px;border-radius:2px;background:var(--line)}
 .stages .bar i.done{background:var(--faint)}
 .stages .bar i.cur{background:var(--accent)}
@@ -353,7 +353,8 @@ const TYPE = {incident:'Incident',bug:'Bug',feature:'Feature',request:'Request',
 const PREFIX = {incident:'SUP',bug:'SUP',question:'SUP',request:'REQ',feature:'FR',internal:'INT',change:'CR'};
 const SRC = {portal:'PORTAL',email:'EMAIL',teams:'TEAMS',jira:'JIRA',ado:'ADO',board:'BOARD'};
 const SUPPORT = ['incident','bug','request','question'];
-const STAGES = ['Triage','Ready','In progress','In development','Verify','Done'];
+const STAGES = ['Triage','Queued','In progress','In development','Ready for testing','Ready to publish','Done'];
+const DONE = STAGES.length - 1;
 const SLAN = {breach:'Breached',risk:'At risk',ok:'On track',paused:'Paused',sched:'Scheduled',backlog:'Backlog',none:'No SLA'};
 const SLAORD = ['breach','risk','ok','paused','sched','backlog','none'];
 const PC = {1:'var(--crit)',2:'var(--warn)',3:'var(--fg)',4:'var(--muted)'};
@@ -369,7 +370,7 @@ const DEF_CFG = {
 
 let CFG = DEF_CFG, PEOPLE = {}, TASKS = [], SAVED = {};
 let DB = null, WRITE = null, LOADED = {tasks:false}, OFFLINE = false;
-const S = {view:'all', layout:'short', group:'stage', sort:'urgency', q:'', quick:null, filters:{}, open:new Set(), fresh:null, me:null};
+const S = {view:'all', layout:'short', group:'stage', sort:'prio', q:'', quick:null, filters:{}, open:new Set(), fresh:null, me:null};
 try { S.me = localStorage.getItem('board.as'); } catch(e) {}
 
 /* ---------- derived values ---------- */
@@ -384,12 +385,12 @@ function planned(t, now){
   const r = relOf(t.release);
   if(!r) return {s:'sched',label:relLabel(t.release),used:0,kind:'Scheduled',target:relLabel(t.release)};
   const end = Date.parse(r.date+'T23:59:59Z'), left = mins(end-now);
-  if(left<0) return {s:'breach',label:`Missed ${relLabel(t.release)}`,used:100,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+  if(left<0) return {s:'breach',left,label:`Missed ${relLabel(t.release)}`,used:100,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
   const start = Date.parse(t.createdAt), used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
-  return {s:'sched',label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+  return {s:'sched',left,label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
 }
 function slaOf(t, now){
-  if(t.stage===5) return {s:'none',label:'Done '+ago(t.resolvedAt||t.updatedAt),used:0,kind:'None',target:''};
+  if(t.stage===DONE) return {s:'none',label:'Done '+ago(t.resolvedAt||t.updatedAt),used:0,kind:'None',target:''};
   if(SUPPORT.includes(t.type) && t.client!=='Coral Technology'){
     const ov = CFG.sla?.overrides?.[t.client]?.[t.priority]; const pol = ov || CFG.sla?.default?.[t.priority];
     // Once the client has a first response, scheduling the fix into a release or the backlog replaces the resolution clock
@@ -400,16 +401,16 @@ function slaOf(t, now){
       const used = Math.min(100, Math.max(0, elapsed/target*100));
       const kind = first?'First response':'Resolution', tg = `${fmtDur(target)} · ${ov?t.client+' contract':'standard'}, P${t.priority}`;
       if(t.pausedSince) return {s:'paused',label:'Paused · waiting on client',used,kind,target:tg};
-      if(left<=0) return {s:'breach',label:`Breached ${fmtDur(-left)} ago`,used:100,kind,target:tg};
-      return {s:used>=75?'risk':'ok',label:`${fmtDur(left)} to ${first?'first response':'resolve'}`,used,kind,target:tg};
+      if(left<=0) return {s:'breach',left,label:`Breached ${fmtDur(-left)} ago`,used:100,kind,target:tg};
+      return {s:used>=75?'risk':'ok',left,label:`${fmtDur(left)} to ${first?'first response':'resolve'}`,used,kind,target:tg};
     }
   }
   if(t.due){
     const end = Date.parse(t.due+'T23:59:59Z'), start = Date.parse(t.createdAt), left = mins(end-now);
     const used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
-    if(left<0) return {s:'breach',label:`Overdue ${fmtDur(-left)}`,used:100,kind:'Due date',target:fmtDate(t.due)};
+    if(left<0) return {s:'breach',left,label:`Overdue ${fmtDur(-left)}`,used:100,kind:'Due date',target:fmtDate(t.due)};
     const today = new Date(now).toISOString().slice(0,10);
-    return {s:left<1440?'risk':'ok',label:t.due===today?'Due today':'Due '+fmtDate(t.due),used,kind:'Due date',target:fmtDate(t.due)};
+    return {s:left<1440?'risk':'ok',left,label:t.due===today?'Due today':'Due '+fmtDate(t.due),used,kind:'Due date',target:fmtDate(t.due)};
   }
   if(t.release) return planned(t, now);
   return {s:'none',label:'No SLA',used:0,kind:'None',target:''};
@@ -428,11 +429,11 @@ const FIELDS = {
   type:{label:'Type', get:t=>TYPE[t.type]||t.type, order:()=>Object.values(TYPE)},
   prio:{label:'Priority', get:t=>'P'+t.priority, order:()=>['P1','P2','P3','P4']},
   sla:{label:'SLA', get:t=>SLAN[t.sla.s], order:()=>SLAORD.map(s=>SLAN[s])},
-  stage:{label:'Stage', get:t=>STAGES[t.stage], order:()=>STAGES.slice(0,5)},
+  stage:{label:'Stage', get:t=>STAGES[t.stage], order:()=>STAGES.slice(0,DONE)},
 };
 const FILTER_KEYS = ['client','module','project','release','team','owner','type','prio','sla'];
 const GROUP_KEYS = ['stage','owner','client','module','project','release','team','prio','type','sla'];
-const SORTS = {urgency:'Most urgent first', prio:'Priority', client:'Client', newest:'Newest first'};
+const SORTS = {prio:'Priority, then time to respond', urgency:'Most urgent first', client:'Client', newest:'Newest first'};
 const QUICK = {
   attention:{label:'Needs attention', fn:t=>!t.owner||t.sla.s==='risk'||t.sla.s==='breach'},
   planned:{label:'Scheduled or in the backlog', fn:t=>!!t.release},
@@ -456,7 +457,7 @@ function applyView(v){
   let d = viewDef(v);
   if(!d && v.startsWith('sv-') && !LOADED.views){ S.view=v; d=VIEWS.all; }
   else if(!d){ v='all'; d=VIEWS.all; }
-  if(viewDef(v)||!v.startsWith('sv-')) S.view=v; S.layout=d.layout||'short'; S.group=d.group||'stage'; S.sort=d.sort||'urgency'; S.quick=d.quick||null; S.open.clear();
+  if(viewDef(v)||!v.startsWith('sv-')) S.view=v; S.layout=d.layout||'short'; S.group=d.group||'stage'; S.sort=d.sort||'prio'; S.quick=d.quick||null; S.open.clear();
   S.filters={}; Object.entries(d.filters||{}).forEach(([k,vals])=>S.filters[k]=new Set(vals));
   render();
 }
@@ -468,13 +469,15 @@ function matches(t, f=S.filters, quick=S.quick, q=S.q){
 }
 let ALL = [];
 const showDone = () => !!viewDef(S.view)?.done;
-const visible = () => ALL.filter(t=>(showDone()?t.stage===5:t.stage<5) && matches(t));
+const visible = () => ALL.filter(t=>(showDone()?t.stage===DONE:t.stage<DONE) && matches(t));
 const urgency = t => SLAORD.indexOf(t.sla.s)*10 + t.priority;
+// Minutes until the SLA, due date or release; overdue is negative. Paused and unscheduled work goes last.
+const timeLeft = t => t.sla.left ?? 1e9;
 function sorted(list){
-  const by = {urgency:(a,b)=>urgency(a)-urgency(b), prio:(a,b)=>a.priority-b.priority||urgency(a)-urgency(b),
+  const by = {urgency:(a,b)=>urgency(a)-urgency(b), prio:(a,b)=>a.priority-b.priority||timeLeft(a)-timeLeft(b)||urgency(a)-urgency(b),
     client:(a,b)=>a.client.localeCompare(b.client)||urgency(a)-urgency(b),
     newest:(a,b)=>(b.resolvedAt||b.createdAt||'').localeCompare(a.resolvedAt||a.createdAt||'')};
-  return list.slice().sort(by[S.sort]||by.urgency);
+  return list.slice().sort(by[S.sort]||by.prio);
 }
 
 /* ---------- atoms ---------- */
@@ -489,21 +492,21 @@ const who = t => t.owner
   ? `<span class="who">${av(t.owner)}<span>${esc(personName(t.owner))}</span></span>`
   : `<span class="who un"><span class="av none">?</span><span>Unassigned · ${esc(t.queue)}</span></span>`;
 const ownerSlot = t => {
-  if(t.owner || t.stage===5 || !canW()) return who(t);
+  if(t.owner || t.stage===DONE || !canW()) return who(t);
   const k = esc(t.key);
   return `<span class="unbox"><button class="assignbtn" type="button" data-act="assign" data-key="${k}" title="Waiting in the ${esc(t.queue)} queue"><span class="av none">?</span>Assign ${I.down}</button>${S.me?`<button class="takebtn" type="button" data-act="take" data-key="${k}">Take it</button>`:''}</span>`;
 };
 const modTag = t => t.module ? `<span class="mod">${esc(t.module)}</span>` : '';
 const sla = s => `<span class="sla" style="--sc:${SC[s.s]}">${s.s==='paused'?I.pause:I.clock}${esc(s.label)}</span>`;
 const meter = s => s.s==='none'?'':`<div class="meter" style="--sc:${SC[s.s]}"><i style="width:${s.used.toFixed(1)}%"></i></div>`;
-const cardCls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner&&t.stage<5?' unassigned':'') + (S.fresh===t.key?' fresh':'');
+const cardCls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner&&t.stage<DONE?' unassigned':'') + (S.fresh===t.key?' fresh':'');
 const canW = () => WRITE!==false && DB;
 
 function actions(t){
   if(!canW()) return '';
   const k = esc(t.key), b = [];
-  const sup = SUPPORT.includes(t.type) && t.client!=='Coral Technology' && t.stage<5;
-  if(!t.owner && S.me && t.stage<5) b.push(`<button class="btn" type="button" data-act="take" data-key="${k}">Take it</button>`);
+  const sup = SUPPORT.includes(t.type) && t.client!=='Coral Technology' && t.stage<DONE;
+  if(!t.owner && S.me && t.stage<DONE) b.push(`<button class="btn" type="button" data-act="take" data-key="${k}">Take it</button>`);
   b.push(`<button class="btn" type="button" data-act="assign" data-key="${k}">${t.owner?'Reassign':'Assign'} ${I.down}</button>`);
   b.push(`<button class="btn" type="button" data-act="stage" data-key="${k}">Stage ${I.down}</button>`);
   if(sup && !t.firstResponseAt) b.push(`<button class="btn" type="button" data-act="respond" data-key="${k}">Log first response</button>`);
@@ -528,7 +531,7 @@ const detail = t => `<div class="detail">
     <dt>Opened</dt><dd>${ago(t.createdAt)} from ${esc((SRC[t.source]||t.source||'').toLowerCase())}</dd>
   </dl>
   ${t.notes?`<div class="notes">${esc(t.notes)}</div>`:''}
-  <div class="slabox"><div class="l"><span>${t.sla.kind==='None'?(t.stage===5?'Closed':'No SLA applies'):esc(t.sla.kind+' · '+t.sla.target)}</span>${sla(t.sla)}</div>${meter(t.sla)}</div>
+  <div class="slabox"><div class="l"><span>${t.sla.kind==='None'?(t.stage===DONE?'Closed':'No SLA applies'):esc(t.sla.kind+' · '+t.sla.target)}</span>${sla(t.sla)}</div>${meter(t.sla)}</div>
   <ul class="hist">${(t.history||[]).slice(-4).reverse().map(h=>`<li><time>${esc(ago(h.at))}</time><span>${esc(h.text)}</span></li>`).join('')}</ul>
   ${actions(t)}
 </div>`;
@@ -554,7 +557,7 @@ function groups(list){
   const f = FIELDS[S.group]; const m = new Map();
   let order = f.order().slice();
   if(S.group==='owner'){
-    const counts = {}; ALL.filter(t=>t.stage<5).forEach(t=>{const k=f.get(t);counts[k]=(counts[k]||0)+1});
+    const counts = {}; ALL.filter(t=>t.stage<DONE).forEach(t=>{const k=f.get(t);counts[k]=(counts[k]||0)+1});
     order = ['Unassigned', ...Object.values(PEOPLE).map(p=>p.name).sort((a,b)=>(counts[b]||0)-(counts[a]||0))];
   }
   if(S.group==='stage' && showDone()) order = ['Done'];
@@ -608,8 +611,8 @@ function renderChrome(){
   const v = viewDef(S.view) || VIEWS.all;
   document.getElementById('vTitle').textContent = v.title || v.name;
   document.getElementById('vDesc').textContent = v.desc || 'Saved view';
-  const open = ALL.filter(t=>t.stage<5);
-  const countFor = d => { const f={}; Object.entries(d.filters||{}).forEach(([fk,vals])=>f[fk]=new Set(vals)); return (d.done?ALL.filter(t=>t.stage===5):open).filter(t=>matches(t,f,d.quick||null,'')).length; };
+  const open = ALL.filter(t=>t.stage<DONE);
+  const countFor = d => { const f={}; Object.entries(d.filters||{}).forEach(([fk,vals])=>f[fk]=new Set(vals)); return (d.done?ALL.filter(t=>t.stage===DONE):open).filter(t=>matches(t,f,d.quick||null,'')).length; };
   document.getElementById('navViews').innerHTML = Object.entries(VIEWS).map(([k,d])=>
     `<button type="button" data-view="${k}" aria-current="${k===S.view}">${I[d.icon]}${d.title}<span class="n${k==='attention'?' hot':''}">${LOADED.tasks?countFor(d):''}</span></button>`).join('');
   const sv = Object.entries(SAVED).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
@@ -674,11 +677,11 @@ function openPop(anchor, html, id){
 }
 function closePop(){ pop.hidden = true; popFor = null; }
 function filterMenu(k){
-  const f = FIELDS[k]; const open = ALL.filter(t=>t.stage<5); const set = S.filters[k] || new Set();
+  const f = FIELDS[k]; const open = ALL.filter(t=>t.stage<DONE); const set = S.filters[k] || new Set();
   return `<h6>${f.label}</h6>` + f.order().map(v=>`<button class="opt" type="button" role="menuitemcheckbox" aria-checked="${set.has(v)}" data-fk="${k}" data-fv="${esc(v)}"><span class="box"></span>${esc(v)}<span class="n">${open.filter(t=>f.get(t)===v).length}</span></button>`).join('');
 }
 function assignMenu(t){
-  const open = ALL.filter(x=>x.stage<5); const load = id => open.filter(x=>x.owner===id).length;
+  const open = ALL.filter(x=>x.stage<DONE); const load = id => open.filter(x=>x.owner===id).length;
   const row = ([id,p]) => { const n=load(id);
     return `<button class="opt${t.owner===id?' sel':''}" type="button" role="menuitem" data-assign="${esc(id)}" data-key="${esc(t.key)}">${av(id)}${esc(p.name)}<span class="load" title="${n} open tasks">${[1,2,3,4].map(i=>`<i class="${i<=n?'on'+(n>=4?' hi':''):''}"></i>`).join('')}</span></button>`; };
   const team = teamOf(t);
@@ -773,7 +776,7 @@ document.addEventListener('click', e=>{
     return;
   }
   if(d.setstage!==undefined){ const i=+d.setstage; closePop(); if(i===t.stage) return;
-    patch(t, {stage:i, resolvedAt:i===5?nowIso():null}, `Moved to ${STAGES[i]} by ${meName()}`, i===5?`${t.key} is done`:`${t.key} moved to ${STAGES[i]}`); return; }
+    patch(t, {stage:i, resolvedAt:i===DONE?nowIso():null}, `Moved to ${STAGES[i]} by ${meName()}`, i===DONE?`${t.key} is done`:`${t.key} moved to ${STAGES[i]}`); return; }
 });
 pop.addEventListener('submit', e=>{
   if(e.target.id!=='svForm') return; e.preventDefault();

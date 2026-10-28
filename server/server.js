@@ -86,6 +86,25 @@ function seedIfEmpty() {
 }
 seedIfEmpty();
 
+// Workflow v2 added "Ready to publish" before Done, so Done moved from step 5 to 6.
+// Move tasks saved under the old workflow, once.
+function migrateStages() {
+  const cfg = readDoc('config', 'settings');
+  if (!cfg || cfg.data.stageModel >= 2) return;
+  db.exec('BEGIN');
+  try {
+    let n = 0;
+    for (const r of q.list.all('tasks')) {
+      const doc = JSON.parse(r.data);
+      if (doc.stage === 5) { doc.stage = 6; q.upsert.run('tasks', r.id, JSON.stringify(doc), nowIso()); n++; }
+    }
+    q.upsert.run('config', 'settings', JSON.stringify({ ...cfg.data, stageModel: 2 }), nowIso());
+    db.exec('COMMIT');
+    console.log(`Moved ${n} done tasks to the new workflow`);
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+}
+migrateStages();
+
 // ---------- live updates (server-sent events) ----------
 const clients = new Set();
 function broadcast(change) {

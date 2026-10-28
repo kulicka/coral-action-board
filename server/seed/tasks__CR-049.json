@@ -9,7 +9,7 @@
  "owner": "DA",
  "queue": "Development",
  "stage": 3,
- "createdAt": "2026-10-22T07:31:24Z",
+ "createdAt": "2026-10-22T08:01:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,17 +24,17 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-22T07:31:24Z",
+   "at": "2026-10-22T08:01:42Z",
    "text": "Created from Jira"
   },
   {
-   "at": "2026-10-22T08:01:24Z",
+   "at": "2026-10-22T08:31:42Z",
    "text": "Assigned to Diego Alvarez"
   },
   {
-   "at": "2026-10-28T10:31:24Z",
+   "at": "2026-10-28T11:01:42Z",
    "text": "Diego updated in Jira"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

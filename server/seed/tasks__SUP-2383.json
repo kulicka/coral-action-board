@@ -9,7 +9,7 @@
  "owner": null,
  "queue": "Development",
  "stage": 1,
- "createdAt": "2026-10-28T10:21:24Z",
+ "createdAt": "2026-10-28T10:51:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,13 +24,13 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-28T10:21:24Z",
+   "at": "2026-10-28T10:51:42Z",
    "text": "Created from support portal"
   },
   {
-   "at": "2026-10-28T12:53:24Z",
+   "at": "2026-10-28T13:23:42Z",
    "text": "Escalated from Support L1"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

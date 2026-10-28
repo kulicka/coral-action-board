@@ -9,7 +9,7 @@
  "owner": null,
  "queue": "Support L1",
  "stage": 0,
- "createdAt": "2026-10-28T13:01:24Z",
+ "createdAt": "2026-10-28T13:31:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,9 +24,9 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-28T13:01:24Z",
+   "at": "2026-10-28T13:31:42Z",
    "text": "Created from support portal"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

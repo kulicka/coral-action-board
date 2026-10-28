@@ -46,7 +46,7 @@ T = [
  ('SUP-2366','question','email','Which IP ranges should Paramount allowlist?','Paramount',None,4,'JR','Support L1',2,1000,200,None,None,None,['Network'],'Jon drafted a reply',None),
  ('SUP-2385','question','portal','Can we schedule exports to an SFTP folder?','Fox',None,4,None,'Support L1',0,30,None,None,None,None,['Exports'],None,None),
  ('SUP-2370','question','email','Is there a sandbox environment for testing?','Netflix','Netflix onboarding',3,'HS','Support L1',2,3000,120,None,None,None,['Environments'],None,None),
- ('CR-047','change','jira','Raise default session timeout from 30 to 60 minutes','NBCU','Coral MSP 4.12 release',3,'LP','QA',4,4000,None,None,10,'Jira DEV-4398',['Config'],'Moved to Verify in Jira',None),
+ ('CR-047','change','jira','Raise default session timeout from 30 to 60 minutes','NBCU','Coral MSP 4.12 release',3,'LP','QA',4,4000,None,None,10,'Jira DEV-4398',['Config'],'Moved to Ready for testing in Jira',None),
  ('CR-049','change','jira','Switch Fox SSO to the new identity provider','Fox','Fox SSO migration',2,'DA','Development',3,9000,None,None,17,'Jira DEV-4402',['SSO'],'Diego updated in Jira',None),
  ('CR-051','change','ado','Rotate storage account keys for the EU region','Coral Technology',None,2,'PN','Platform',2,6000,None,None,0,'Azure DevOps #8840',['Security'],'Priya scheduled a maintenance window',None),
  ('CR-052','change','board','Add the Paramount logo to the client portal sign-in page','Paramount','Paramount reporting rollout',3,'JR','Support L1',1,2000,None,None,5,None,['Branding'],None,None),
@@ -92,8 +92,17 @@ assert set(MODREL) == {x[0] for x in T}, set(MODREL) ^ {x[0] for x in T}
 SRC_LABEL = {'portal': 'support portal', 'email': 'email', 'teams': 'Teams', 'jira': 'Jira', 'ado': 'Azure DevOps', 'board': 'the board'}
 NAME = {p[0]: p[1] for p in PEOPLE}
 
+# T lists stages in the original 6-step workflow; Ready to publish was added before Done.
+STAGE_IX = [0, 1, 2, 3, 4, 6]
+DONE = 6
+# Tested and waiting for its release.
+READY_TO_PUBLISH = {'CR-047': 'Passed testing, waiting for the 4.12 release'}
+
 docs = []
 for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, paused, due, link, tags, last, notes) in T:
+    stage = STAGE_IX[stage]
+    if key in READY_TO_PUBLISH:
+        stage, last = 5, READY_TO_PUBLISH[key]
     created = NOW - timedelta(minutes=age)
     hist = [{'at': iso(created), 'text': f'Created from {SRC_LABEL[src]}'}]
     if owner:
@@ -103,7 +112,7 @@ for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, 
     if paused is not None:
         hist.append({'at': iso(created + timedelta(minutes=paused)), 'text': 'Waiting on client'})
     resolved = None
-    if stage == 5:
+    if stage == DONE:
         resolved = created + timedelta(minutes=age * 0.6)
         hist.append({'at': iso(resolved), 'text': 'Moved to Done'})
     if last:
@@ -133,7 +142,7 @@ def put(coll, doc_id, data):
 
 put('config', 'settings', {'clients': CLIENTS, 'projects': PROJECTS, 'teams': TEAMS, 'modules': MODULES, 'releases': RELEASES,
                            'sla': {'default': SLA_DEFAULT, 'overrides': SLA_OVERRIDES},
-                           'seededAt': iso(NOW)})
+                           'seededAt': iso(NOW), 'stageModel': 2})
 for pid, name, team, color in PEOPLE:
     put('people', pid, {'name': name, 'team': team, 'color': color})
 for d in docs:
@@ -187,9 +196,10 @@ L.append("       CASE WHEN v.stage = 'done' THEN DATEADD(MINUTE, -v.age * 4 / 10
 L.append('       CASE WHEN v.due_days IS NOT NULL THEN CAST(DATEADD(DAY, v.due_days, @now) AS DATE) END,')
 L.append('       v.external_ref, v.notes')
 L.append('FROM (VALUES')
-STAGE = ['triage', 'ready', 'in_progress', 'in_dev', 'verify', 'done']
+STAGE = ['triage', 'queued', 'in_progress', 'in_dev', 'ready_for_test', 'ready_to_publish', 'done']
 vals = []
 for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, paused, due, link, tags, last, notes) in T:
+    stage = 5 if key in READY_TO_PUBLISH else STAGE_IX[stage]
     n = lambda x: 'NULL' if x is None else str(x)
     vals.append(f"    ({q(key)}, {q(title)}, {q(typ)}, {q(src)}, {prio}, {q(STAGE[stage])}, {q(client)}, {q(project)}, {q(owner)}, {q(queue)}, "
                 f"{q(MODREL[key][0])}, {q(MODREL[key][1])}, {age}, {n(fr)}, {n(paused)}, {n(due)}, {q(link)}, {q(notes)})")

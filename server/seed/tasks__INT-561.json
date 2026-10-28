@@ -9,7 +9,7 @@
  "owner": "SO",
  "queue": "Support L2",
  "stage": 2,
- "createdAt": "2026-10-26T19:51:24Z",
+ "createdAt": "2026-10-26T20:21:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,13 +24,13 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-26T19:51:24Z",
+   "at": "2026-10-26T20:21:42Z",
    "text": "Created from the board"
   },
   {
-   "at": "2026-10-26T20:21:24Z",
+   "at": "2026-10-26T20:51:42Z",
    "text": "Assigned to Sam Okafor"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }
