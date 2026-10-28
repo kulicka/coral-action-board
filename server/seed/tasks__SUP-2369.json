@@ -1,0 +1,48 @@
+{
+ "key": "SUP-2369",
+ "type": "question",
+ "source": "teams",
+ "title": "How do we export the audit log for a compliance review?",
+ "client": "AMC",
+ "project": null,
+ "priority": 3,
+ "owner": "JR",
+ "queue": "Support L1",
+ "stage": 2,
+ "createdAt": "2026-10-26T13:11:24Z",
+ "firstResponseAt": "2026-10-26T14:11:24Z",
+ "pausedSince": "2026-10-28T11:51:24Z",
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Compliance"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-26T13:11:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-26T13:41:24Z",
+   "text": "Assigned to Jon Ruiz"
+  },
+  {
+   "at": "2026-10-26T14:11:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Jon replied in Teams, waiting on AMC"
+  },
+  {
+   "at": "2026-10-28T11:51:24Z",
+   "text": "Waiting on client"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

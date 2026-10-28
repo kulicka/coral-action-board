@@ -1,0 +1,44 @@
+{
+ "key": "CR-044",
+ "type": "change",
+ "source": "jira",
+ "title": "Require MFA for admin roles",
+ "client": "AMC",
+ "project": null,
+ "priority": 2,
+ "owner": "DA",
+ "queue": "Development",
+ "stage": 5,
+ "createdAt": "2026-10-20T05:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": "2026-10-25T05:31:24Z",
+ "due": null,
+ "module": "Platform",
+ "release": null,
+ "link": "Jira DEV-4380",
+ "tags": [
+  "Security"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-20T05:31:24Z",
+   "text": "Created from Jira"
+  },
+  {
+   "at": "2026-10-20T06:01:24Z",
+   "text": "Assigned to Diego Alvarez"
+  },
+  {
+   "at": "2026-10-25T05:31:24Z",
+   "text": "Moved to Done"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Released in 4.11"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

@@ -1,0 +1,40 @@
+{
+ "key": "SUP-2331",
+ "type": "bug",
+ "source": "portal",
+ "title": "Rights window dates shift by one day for APAC territories",
+ "client": "Fox",
+ "project": null,
+ "priority": 3,
+ "owner": null,
+ "queue": "Development",
+ "stage": 1,
+ "createdAt": "2026-10-22T07:31:24Z",
+ "firstResponseAt": "2026-10-22T08:31:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "International",
+ "release": "4.13",
+ "link": null,
+ "tags": [
+  "Rights"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-22T07:31:24Z",
+   "text": "Created from support portal"
+  },
+  {
+   "at": "2026-10-22T08:31:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Accepted for 4.13, needs an owner"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

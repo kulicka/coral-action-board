@@ -1,0 +1,86 @@
+{
+ "clients": [
+  "Paramount",
+  "AMC",
+  "Netflix",
+  "NBCU",
+  "Fox",
+  "Coral Technology"
+ ],
+ "projects": [
+  "Coral MSP 4.12 release",
+  "Netflix onboarding",
+  "Fox SSO migration",
+  "Paramount reporting rollout",
+  "Product backlog"
+ ],
+ "teams": [
+  "Support L1",
+  "Support L2",
+  "Development",
+  "Platform",
+  "QA",
+  "Product"
+ ],
+ "modules": [
+  "Operations",
+  "Finance",
+  "TVOD",
+  "International",
+  "Reporting",
+  "Platform"
+ ],
+ "releases": [
+  {
+   "name": "4.12",
+   "date": "2026-11-07"
+  },
+  {
+   "name": "4.13",
+   "date": "2026-12-04"
+  },
+  {
+   "name": "5.0",
+   "date": "2027-01-29"
+  }
+ ],
+ "sla": {
+  "default": {
+   "1": {
+    "fr": 60,
+    "res": 240
+   },
+   "2": {
+    "fr": 240,
+    "res": 4320
+   },
+   "3": {
+    "fr": 480,
+    "res": 7200
+   },
+   "4": {
+    "fr": 480,
+    "res": 7200
+   }
+  },
+  "overrides": {
+   "Paramount": {
+    "1": {
+     "fr": 60,
+     "res": 180
+    }
+   },
+   "Fox": {
+    "1": {
+     "fr": 60,
+     "res": 240
+    },
+    "2": {
+     "fr": 240,
+     "res": 2880
+    }
+   }
+  }
+ },
+ "seededAt": "2026-10-28T13:31:24Z"
+}

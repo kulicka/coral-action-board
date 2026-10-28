@@ -1,0 +1,40 @@
+{
+ "key": "SUP-2370",
+ "type": "question",
+ "source": "email",
+ "title": "Is there a sandbox environment for testing?",
+ "client": "Netflix",
+ "project": "Netflix onboarding",
+ "priority": 3,
+ "owner": "HS",
+ "queue": "Support L1",
+ "stage": 2,
+ "createdAt": "2026-10-26T11:31:24Z",
+ "firstResponseAt": "2026-10-26T13:31:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Environments"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-26T11:31:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-26T12:01:24Z",
+   "text": "Assigned to Hana Sato"
+  },
+  {
+   "at": "2026-10-26T13:31:24Z",
+   "text": "First response sent"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

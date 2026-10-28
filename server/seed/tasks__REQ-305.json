@@ -1,0 +1,44 @@
+{
+ "key": "REQ-305",
+ "type": "request",
+ "source": "teams",
+ "title": "Add NBCU's new subsidiary as a tenant",
+ "client": "NBCU",
+ "project": null,
+ "priority": 3,
+ "owner": "SO",
+ "queue": "Support L2",
+ "stage": 1,
+ "createdAt": "2026-10-26T13:11:24Z",
+ "firstResponseAt": "2026-10-26T14:51:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "International",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Tenants"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-26T13:11:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-26T13:41:24Z",
+   "text": "Assigned to Sam Okafor"
+  },
+  {
+   "at": "2026-10-26T14:51:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Tenant form received"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

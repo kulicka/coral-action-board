@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2387",
+ "type": "bug",
+ "source": "portal",
+ "title": "Search ignores accented characters in titles",
+ "client": "AMC",
+ "project": null,
+ "priority": 3,
+ "owner": null,
+ "queue": "Support L1",
+ "stage": 0,
+ "createdAt": "2026-10-28T06:51:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Search"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T06:51:24Z",
+   "text": "Created from support portal"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

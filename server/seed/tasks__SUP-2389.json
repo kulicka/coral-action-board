@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2389",
+ "type": "bug",
+ "source": "email",
+ "title": "Finance export is missing the VAT column for UK entities",
+ "client": "AMC",
+ "project": null,
+ "priority": 2,
+ "owner": null,
+ "queue": "Support L1",
+ "stage": 0,
+ "createdAt": "2026-10-28T12:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Finance",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Exports"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T12:31:24Z",
+   "text": "Created from email"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

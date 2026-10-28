@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2358",
+ "type": "incident",
+ "source": "email",
+ "title": "Intermittent 502 errors on the AMC partner portal",
+ "client": "AMC",
+ "project": null,
+ "priority": 1,
+ "owner": "OH",
+ "queue": "Development",
+ "stage": 3,
+ "createdAt": "2026-10-28T08:31:24Z",
+ "firstResponseAt": "2026-10-28T08:41:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": "Jira DEV-4421",
+ "tags": [
+  "Availability"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T08:31:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-28T08:41:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T09:01:24Z",
+   "text": "Assigned to Omar Haddad"
+  },
+  {
+   "at": "2026-10-28T12:31:24Z",
+   "text": "Omar is on a bridge call with AMC"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

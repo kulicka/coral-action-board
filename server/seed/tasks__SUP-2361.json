@@ -1,0 +1,48 @@
+{
+ "key": "SUP-2361",
+ "type": "bug",
+ "source": "email",
+ "title": "Usage report double counts shared seats",
+ "client": "Paramount",
+ "project": "Paramount reporting rollout",
+ "priority": 2,
+ "owner": "MC",
+ "queue": "Development",
+ "stage": 4,
+ "createdAt": "2026-10-26T18:11:24Z",
+ "firstResponseAt": "2026-10-26T19:41:24Z",
+ "pausedSince": "2026-10-28T03:31:24Z",
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Finance",
+ "release": null,
+ "link": "Jira DEV-4409",
+ "tags": [
+  "Reporting"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-26T18:11:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-26T18:41:24Z",
+   "text": "Assigned to Maya Chen"
+  },
+  {
+   "at": "2026-10-26T19:41:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T03:31:24Z",
+   "text": "Waiting on client"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Asked Paramount to confirm the expected figures"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

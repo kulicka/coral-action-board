@@ -1,0 +1,36 @@
+{
+ "key": "FR-124",
+ "type": "feature",
+ "source": "email",
+ "title": "Single sign-on for the mobile app",
+ "client": "Coral Technology",
+ "project": "Product backlog",
+ "priority": 3,
+ "owner": null,
+ "queue": "Product",
+ "stage": 0,
+ "createdAt": "2026-10-23T13:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": "5.0",
+ "link": null,
+ "tags": [
+  "Requested by 2 clients"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-23T13:31:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Asked for by Paramount and NBCU"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

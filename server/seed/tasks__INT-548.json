@@ -1,0 +1,40 @@
+{
+ "key": "INT-548",
+ "type": "internal",
+ "source": "ado",
+ "title": "Load test the new reporting API",
+ "client": "Coral Technology",
+ "project": "Paramount reporting rollout",
+ "priority": 3,
+ "owner": "LP",
+ "queue": "QA",
+ "stage": 2,
+ "createdAt": "2026-10-23T00:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": "2026-11-10",
+ "module": "Reporting",
+ "release": null,
+ "link": "Azure DevOps #8790",
+ "tags": [
+  "Performance"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-23T00:11:24Z",
+   "text": "Created from Azure DevOps"
+  },
+  {
+   "at": "2026-10-23T00:41:24Z",
+   "text": "Assigned to Lena Park"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Lena logged results"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

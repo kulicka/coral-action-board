@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2386",
+ "type": "incident",
+ "source": "email",
+ "title": "Playback analytics delayed by about two hours",
+ "client": "NBCU",
+ "project": null,
+ "priority": 2,
+ "owner": null,
+ "queue": "Support L2",
+ "stage": 0,
+ "createdAt": "2026-10-28T13:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Reporting",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Analytics"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T13:11:24Z",
+   "text": "Created from email"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

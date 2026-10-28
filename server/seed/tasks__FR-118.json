@@ -1,0 +1,36 @@
+{
+ "key": "FR-118",
+ "type": "feature",
+ "source": "portal",
+ "title": "Bulk user import from CSV",
+ "client": "Coral Technology",
+ "project": "Product backlog",
+ "priority": 3,
+ "owner": null,
+ "queue": "Product",
+ "stage": 0,
+ "createdAt": "2026-10-26T13:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Requested by 3 clients"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-26T13:11:24Z",
+   "text": "Created from support portal"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Asked for by Netflix, Fox and AMC"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

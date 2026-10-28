@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2376",
+ "type": "bug",
+ "source": "email",
+ "title": "Monthly invoice export totals are off by one cent",
+ "client": "NBCU",
+ "project": "Coral MSP 4.12 release",
+ "priority": 2,
+ "owner": "MC",
+ "queue": "Development",
+ "stage": 3,
+ "createdAt": "2026-10-27T12:31:24Z",
+ "firstResponseAt": "2026-10-27T13:31:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Finance",
+ "release": "4.12",
+ "link": "Jira DEV-4410",
+ "tags": [
+  "Invoicing"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-27T12:31:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-27T13:01:24Z",
+   "text": "Assigned to Maya Chen"
+  },
+  {
+   "at": "2026-10-27T13:31:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Maya commented in Jira"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

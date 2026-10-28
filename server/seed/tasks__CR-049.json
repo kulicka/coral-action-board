@@ -1,0 +1,40 @@
+{
+ "key": "CR-049",
+ "type": "change",
+ "source": "jira",
+ "title": "Switch Fox SSO to the new identity provider",
+ "client": "Fox",
+ "project": "Fox SSO migration",
+ "priority": 2,
+ "owner": "DA",
+ "queue": "Development",
+ "stage": 3,
+ "createdAt": "2026-10-22T07:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": "2026-11-14",
+ "module": "Platform",
+ "release": "4.13",
+ "link": "Jira DEV-4402",
+ "tags": [
+  "SSO"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-22T07:31:24Z",
+   "text": "Created from Jira"
+  },
+  {
+   "at": "2026-10-22T08:01:24Z",
+   "text": "Assigned to Diego Alvarez"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Diego updated in Jira"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

@@ -1,0 +1,36 @@
+{
+ "key": "FR-126",
+ "type": "feature",
+ "source": "email",
+ "title": "Multi-currency invoices for international clients",
+ "client": "Coral Technology",
+ "project": "Product backlog",
+ "priority": 3,
+ "owner": null,
+ "queue": "Product",
+ "stage": 0,
+ "createdAt": "2026-10-14T16:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Finance",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Requested by 2 clients"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-14T16:11:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Asked for by Fox and NBCU"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

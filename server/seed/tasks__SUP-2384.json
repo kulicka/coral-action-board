@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2384",
+ "type": "incident",
+ "source": "teams",
+ "title": "Asset ingest queue stalled for live sports feeds",
+ "client": "Fox",
+ "project": null,
+ "priority": 1,
+ "owner": "AK",
+ "queue": "Support L2",
+ "stage": 2,
+ "createdAt": "2026-10-28T12:01:24Z",
+ "firstResponseAt": "2026-10-28T12:16:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Ingest"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T12:01:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-28T12:10:24Z",
+   "text": "Assigned to Ava Kowalski"
+  },
+  {
+   "at": "2026-10-28T12:16:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T13:13:24Z",
+   "text": "Ava posted an update in Teams"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

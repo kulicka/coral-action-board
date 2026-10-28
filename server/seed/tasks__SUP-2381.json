@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2381",
+ "type": "incident",
+ "source": "portal",
+ "title": "Users can't sign in after SSO certificate rotation",
+ "client": "Paramount",
+ "project": null,
+ "priority": 1,
+ "owner": null,
+ "queue": "Support L2",
+ "stage": 0,
+ "createdAt": "2026-10-28T12:46:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": null,
+ "link": null,
+ "tags": [
+  "SSO"
+ ],
+ "notes": "All Paramount admins locked out since the 9pm certificate rotation.",
+ "history": [
+  {
+   "at": "2026-10-28T12:46:24Z",
+   "text": "Created from support portal"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}
