@@ -18,6 +18,21 @@ CREATE TABLE dbo.product (
     name          NVARCHAR(200) NOT NULL CONSTRAINT uq_product_name UNIQUE
 );
 
+-- Product areas shown on the card: Operations, Finance, TVOD, International ...
+CREATE TABLE dbo.product_module (
+    module_id     INT IDENTITY(1,1) CONSTRAINT pk_product_module PRIMARY KEY,
+    product_id    INT NOT NULL CONSTRAINT fk_module_product REFERENCES dbo.product(product_id),
+    name          NVARCHAR(100) NOT NULL,
+    CONSTRAINT uq_module_name UNIQUE (product_id, name)
+);
+
+-- Releases work can be scheduled into. 'Backlog' is a row with no ship date.
+CREATE TABLE dbo.product_release (
+    release_id    INT IDENTITY(1,1) CONSTRAINT pk_product_release PRIMARY KEY,
+    name          NVARCHAR(40) NOT NULL CONSTRAINT uq_release_name UNIQUE,
+    ship_date     DATE NULL
+);
+
 CREATE TABLE dbo.project (
     project_id    INT IDENTITY(1,1) CONSTRAINT pk_project PRIMARY KEY,
     name          NVARCHAR(200) NOT NULL CONSTRAINT uq_project_name UNIQUE,
@@ -68,6 +83,8 @@ CREATE TABLE dbo.task (
     project_id         INT NULL     CONSTRAINT fk_task_project REFERENCES dbo.project(project_id),
     owner_person_id    INT NULL     CONSTRAINT fk_task_owner   REFERENCES dbo.person(person_id),  -- NULL = unassigned
     queue_team_id      INT NOT NULL CONSTRAINT fk_task_queue   REFERENCES dbo.team(team_id),      -- queue it waits in
+    module_id          INT NULL     CONSTRAINT fk_task_module  REFERENCES dbo.product_module(module_id),
+    release_id         INT NULL     CONSTRAINT fk_task_release REFERENCES dbo.product_release(release_id), -- scheduled release or Backlog
     created_at         DATETIME2(0) NOT NULL CONSTRAINT df_task_created DEFAULT (SYSUTCDATETIME()),
     first_response_at  DATETIME2(0) NULL,
     sla_paused_since   DATETIME2(0) NULL,          -- set while waiting on the client

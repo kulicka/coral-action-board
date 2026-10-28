@@ -157,8 +157,8 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 
 /* ledger */
 .lwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-.ledger{min-width:1120px}
-.r{display:grid;grid-template-columns:16px 26px 124px 78px minmax(220px,1fr) 128px 196px 108px 210px;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
+.ledger{min-width:1250px}
+.r{display:grid;grid-template-columns:16px 26px 124px 78px minmax(220px,1fr) 128px 112px 196px 108px 210px;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
 .r:hover{background:color-mix(in srgb,var(--fg) 3%,transparent)}
 .r.hd{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);cursor:default;border-top:0}
 .r.hd:hover{background:none}
@@ -220,6 +220,18 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
   .col{flex-basis:84vw}
 }
 @media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
+.mod{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 5px;white-space:nowrap}
+.card .ctx{display:flex;align-items:center;gap:6px}
+.card .ctx .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.assignbtn{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent);border:1px dashed color-mix(in srgb,var(--warn) 55%,transparent);border-radius:999px;padding:1px 9px 1px 2px;cursor:pointer;white-space:nowrap;min-width:0}
+.assignbtn:hover{background:color-mix(in srgb,var(--warn) 18%,transparent)}
+.assignbtn .av{width:18px;height:18px;font-size:9px}
+.assignbtn svg{width:10px;height:10px}
+.takebtn{font-size:11.5px;color:var(--muted);background:none;border:0;cursor:pointer;padding:0 2px;text-decoration:underline;text-underline-offset:3px}
+.takebtn:hover{color:var(--fg)}
+.unbox{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto}
+.r .unbox{flex:none}
+.opt .tk{color:var(--accent)}
 .banner{display:flex;gap:10px;align-items:center;border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:10px;padding:10px 14px;font-size:13px}
 .state{border:1px dashed var(--line-strong);border-radius:12px;padding:40px 20px;text-align:center;color:var(--muted);display:grid;gap:12px;justify-items:center}
 .state b{color:var(--fg);font-weight:500;font-size:15px}
@@ -289,6 +301,10 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
       <div class="field"><label for="fClient">Client</label><select id="fClient"></select></div>
       <div class="field"><label for="fPrio">Priority</label><select id="fPrio"><option value="1">P1 · Critical</option><option value="2">P2 · High</option><option value="3">P3 · Normal</option><option value="4">P4 · Low</option></select></div>
     </div>
+    <div class="two">
+      <div class="field"><label for="fModule">Product module</label><select id="fModule"></select></div>
+      <div class="field"><label for="fRelease">Release</label><select id="fRelease"></select></div>
+    </div>
     <div class="field"><label for="fProject">Project</label><select id="fProject"></select></div>
     <div class="two">
       <div class="field"><label for="fOwner">Owner</label><select id="fOwner"></select></div>
@@ -329,6 +345,8 @@ const I = {
   people:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="5" cy="5" r="2"/><circle cx="10" cy="5.5" r="1.6"/><path d="M1.5 12c.4-2 1.8-3 3.5-3s3.1 1 3.5 3M9 9.2c1.6-.2 3 .7 3.4 2.6"/></svg>',
   globe:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="7" r="5.5"/><path d="M1.5 7h11M7 1.5c1.6 1.6 2.3 3.4 2.3 5.5S8.6 10.9 7 12.5C5.4 10.9 4.7 9.1 4.7 7S5.4 3.1 7 1.5z"/></svg>',
   done:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="m4.6 7.2 1.7 1.7 3.2-3.4"/></svg>',
+  flag:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M3 12.5V2M3 2.5h7.5l-1.5 2.5 1.5 2.5H3"/></svg>',
+  cal:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.8" y="2.8" width="10.4" height="9.4" rx="1.3"/><path d="M1.8 5.8h10.4M4.6 1.5v2.6M9.4 1.5v2.6"/></svg>',
   star:'<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="m7 1.8 1.6 3.3 3.6.5-2.6 2.5.6 3.6L7 10l-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z"/></svg>',
 };
 const TYPE = {incident:'Incident',bug:'Bug',feature:'Feature',request:'Request',question:'Question',internal:'Internal task',change:'Change request'};
@@ -336,14 +354,16 @@ const PREFIX = {incident:'SUP',bug:'SUP',question:'SUP',request:'REQ',feature:'F
 const SRC = {portal:'PORTAL',email:'EMAIL',teams:'TEAMS',jira:'JIRA',ado:'ADO',board:'BOARD'};
 const SUPPORT = ['incident','bug','request','question'];
 const STAGES = ['Triage','Ready','In progress','In development','Verify','Done'];
-const SLAN = {breach:'Breached',risk:'At risk',ok:'On track',paused:'Paused',none:'No SLA'};
-const SLAORD = ['breach','risk','ok','paused','none'];
+const SLAN = {breach:'Breached',risk:'At risk',ok:'On track',paused:'Paused',sched:'Scheduled',backlog:'Backlog',none:'No SLA'};
+const SLAORD = ['breach','risk','ok','paused','sched','backlog','none'];
 const PC = {1:'var(--crit)',2:'var(--warn)',3:'var(--fg)',4:'var(--muted)'};
-const SC = {ok:'var(--ok)',risk:'var(--warn)',breach:'var(--crit)',paused:'var(--muted)',none:'var(--faint)'};
+const SC = {ok:'var(--ok)',risk:'var(--warn)',breach:'var(--crit)',paused:'var(--muted)',sched:'var(--accent)',backlog:'var(--faint)',none:'var(--faint)'};
 const DEF_CFG = {
   clients:['Paramount','AMC','Netflix','NBCU','Fox','Coral Technology'],
   projects:['Coral MSP 4.12 release','Netflix onboarding','Fox SSO migration','Paramount reporting rollout','Product backlog'],
   teams:['Support L1','Support L2','Development','Platform','QA','Product'],
+  modules:['Operations','Finance','TVOD','International','Reporting','Platform'],
+  releases:[],
   sla:{default:{1:{fr:60,res:240},2:{fr:240,res:4320},3:{fr:480,res:7200},4:{fr:480,res:7200}},overrides:{}},
 };
 
@@ -357,11 +377,23 @@ const mins = ms => ms/60000;
 function fmtDur(m){ m=Math.max(0,Math.round(m)); if(m<60) return m+'m'; if(m<1440){const h=Math.floor(m/60),r=m%60;return h+'h'+(r?' '+r+'m':'');} const d=Math.floor(m/1440),h=Math.floor((m%1440)/60); return d+'d'+(h?' '+h+'h':''); }
 const fmtDate = s => new Date(s+'T00:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
 function ago(iso){ if(!iso) return ''; const m=mins(Date.now()-Date.parse(iso)); if(m<1) return 'just now'; if(m<60) return Math.round(m)+'m ago'; if(m<1440) return Math.round(m/60)+'h ago'; if(m<2880) return 'yesterday'; return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+const relOf = name => (CFG.releases||[]).find(r=>r.name===name);
+const relLabel = name => !name ? 'Unscheduled' : name==='Backlog' ? 'Backlog' : 'Release '+name;
+function planned(t, now){
+  if(t.release==='Backlog') return {s:'backlog',label:'Backlog',used:0,kind:'Backlog',target:'Not scheduled yet'};
+  const r = relOf(t.release);
+  if(!r) return {s:'sched',label:relLabel(t.release),used:0,kind:'Scheduled',target:relLabel(t.release)};
+  const end = Date.parse(r.date+'T23:59:59Z'), left = mins(end-now);
+  if(left<0) return {s:'breach',label:`Missed ${relLabel(t.release)}`,used:100,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+  const start = Date.parse(t.createdAt), used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
+  return {s:'sched',label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+}
 function slaOf(t, now){
   if(t.stage===5) return {s:'none',label:'Done '+ago(t.resolvedAt||t.updatedAt),used:0,kind:'None',target:''};
   if(SUPPORT.includes(t.type) && t.client!=='Coral Technology'){
     const ov = CFG.sla?.overrides?.[t.client]?.[t.priority]; const pol = ov || CFG.sla?.default?.[t.priority];
-    if(pol){
+    // Once the client has a first response, scheduling the fix into a release or the backlog replaces the resolution clock
+    if(pol && !(t.firstResponseAt && t.release)){
       const pausedNow = t.pausedSince ? mins(now-Date.parse(t.pausedSince)) : 0;
       const elapsed = mins(now-Date.parse(t.createdAt)) - (t.pausedMins||0) - pausedNow;
       const first = !t.firstResponseAt, target = first?pol.fr:pol.res, left = target-elapsed;
@@ -379,6 +411,7 @@ function slaOf(t, now){
     const today = new Date(now).toISOString().slice(0,10);
     return {s:left<1440?'risk':'ok',label:t.due===today?'Due today':'Due '+fmtDate(t.due),used,kind:'Due date',target:fmtDate(t.due)};
   }
+  if(t.release) return planned(t, now);
   return {s:'none',label:'No SLA',used:0,kind:'None',target:''};
 }
 const personName = id => PEOPLE[id]?.name || id;
@@ -390,26 +423,31 @@ const FIELDS = {
   project:{label:'Project', get:t=>t.project||'No project', order:()=>[...CFG.projects,'No project']},
   team:{label:'Team', get:teamOf, order:()=>CFG.teams},
   owner:{label:'Owner', get:t=>t.owner?personName(t.owner):'Unassigned', order:()=>['Unassigned',...Object.values(PEOPLE).map(p=>p.name)]},
+  module:{label:'Module', get:t=>t.module||'No module', order:()=>[...(CFG.modules||[]),'No module']},
+  release:{label:'Release', get:t=>relLabel(t.release), order:()=>[...(CFG.releases||[]).map(r=>relLabel(r.name)),'Backlog','Unscheduled']},
   type:{label:'Type', get:t=>TYPE[t.type]||t.type, order:()=>Object.values(TYPE)},
   prio:{label:'Priority', get:t=>'P'+t.priority, order:()=>['P1','P2','P3','P4']},
   sla:{label:'SLA', get:t=>SLAN[t.sla.s], order:()=>SLAORD.map(s=>SLAN[s])},
   stage:{label:'Stage', get:t=>STAGES[t.stage], order:()=>STAGES.slice(0,5)},
 };
-const FILTER_KEYS = ['client','project','team','owner','type','prio','sla'];
-const GROUP_KEYS = ['stage','owner','client','project','team','prio','type','sla'];
+const FILTER_KEYS = ['client','module','project','release','team','owner','type','prio','sla'];
+const GROUP_KEYS = ['stage','owner','client','module','project','release','team','prio','type','sla'];
 const SORTS = {urgency:'Most urgent first', prio:'Priority', client:'Client', newest:'Newest first'};
 const QUICK = {
   attention:{label:'Needs attention', fn:t=>!t.owner||t.sla.s==='risk'||t.sla.s==='breach'},
+  planned:{label:'Scheduled or in the backlog', fn:t=>!!t.release},
   mine:{label:'Mine and my queue', fn:t=>S.me && (t.owner===S.me||(!t.owner&&t.queue===PEOPLE[S.me]?.team))},
 };
 const VIEWS = {
   all:{title:'All open work',desc:'Everything in flight across Coral MSP, by workflow stage.',icon:'all',group:'stage',layout:'short'},
+  hot:{title:'P1/P2 active and unassigned',desc:'Every open P1 and P2 by owner. Unassigned work sits in the first column, ready to assign.',icon:'flag',group:'owner',layout:'short',filters:{prio:['P1','P2']}},
   attention:{title:'Needs attention',desc:'Unassigned, at risk or breached. Nothing here should sit for long.',icon:'alert',group:'sla',layout:'short',quick:'attention'},
   mine:{title:'My queue',desc:'Your tasks, plus anything waiting in your team queue that you can take.',icon:'me',group:'stage',layout:'detail',quick:'mine'},
   support:{title:'Support desk',desc:'Client tickets, grouped by who is accountable for each one.',icon:'support',group:'owner',layout:'short',filters:{type:['Incident','Bug','Request','Question']}},
   release:{title:'Coral MSP 4.12 release',desc:'Release scope by stage, with links into Jira and Azure DevOps.',icon:'release',group:'stage',layout:'detail',filters:{project:['Coral MSP 4.12 release']}},
   people:{title:"Who's on what",desc:'Every open task under its accountable owner, so load is easy to compare.',icon:'people',group:'owner',layout:'short'},
   leadership:{title:'Company overview',desc:'One line per task, grouped by client, for leadership.',icon:'globe',group:'client',layout:'ledger'},
+  planned:{title:'Backlog and releases',desc:'Work that is scheduled into a release or parked in the backlog, grouped by release.',icon:'cal',group:'release',layout:'ledger',quick:'planned',sort:'prio'},
   done:{title:'Recently done',desc:'Finished work, newest first.',icon:'done',group:'client',layout:'ledger',sort:'newest',done:true},
 };
 const viewDef = v => v.startsWith('sv-') ? SAVED[v.slice(3)] : VIEWS[v];
@@ -425,7 +463,7 @@ function applyView(v){
 function matches(t, f=S.filters, quick=S.quick, q=S.q){
   if(quick && QUICK[quick] && !QUICK[quick].fn(t)) return false;
   for(const k of FILTER_KEYS){ const set=f[k]; if(set&&set.size&&!set.has(FIELDS[k].get(t))) return false; }
-  if(q){ const s=(t.title+' '+t.key+' '+t.client+' '+(t.owner?personName(t.owner):'')).toLowerCase(); if(!s.includes(q.toLowerCase())) return false; }
+  if(q){ const s=(t.title+' '+t.key+' '+t.client+' '+(t.module||'')+' '+(t.owner?personName(t.owner):'')).toLowerCase(); if(!s.includes(q.toLowerCase())) return false; }
   return true;
 }
 let ALL = [];
@@ -450,6 +488,12 @@ const av = (id,lg) => `<span class="av${lg?' lg':''}" style="--avc:${col(PEOPLE[
 const who = t => t.owner
   ? `<span class="who">${av(t.owner)}<span>${esc(personName(t.owner))}</span></span>`
   : `<span class="who un"><span class="av none">?</span><span>Unassigned · ${esc(t.queue)}</span></span>`;
+const ownerSlot = t => {
+  if(t.owner || t.stage===5 || !canW()) return who(t);
+  const k = esc(t.key);
+  return `<span class="unbox"><button class="assignbtn" type="button" data-act="assign" data-key="${k}" title="Waiting in the ${esc(t.queue)} queue"><span class="av none">?</span>Assign ${I.down}</button>${S.me?`<button class="takebtn" type="button" data-act="take" data-key="${k}">Take it</button>`:''}</span>`;
+};
+const modTag = t => t.module ? `<span class="mod">${esc(t.module)}</span>` : '';
 const sla = s => `<span class="sla" style="--sc:${SC[s.s]}">${s.s==='paused'?I.pause:I.clock}${esc(s.label)}</span>`;
 const meter = s => s.s==='none'?'':`<div class="meter" style="--sc:${SC[s.s]}"><i style="width:${s.used.toFixed(1)}%"></i></div>`;
 const cardCls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner&&t.stage<5?' unassigned':'') + (S.fresh===t.key?' fresh':'');
@@ -476,6 +520,8 @@ const detail = t => `<div class="detail">
     <dt>Product</dt><dd>Coral MSP</dd>
     <dt>Project</dt><dd>${esc(t.project||'No project')}</dd>
     <dt>Owner</dt><dd>${who(t)}</dd>
+    <dt>Module</dt><dd>${t.module?modTag(t):'Not set'}</dd>
+    ${t.release?`<dt>Release</dt><dd>${esc(relLabel(t.release))}${relOf(t.release)?' · '+fmtDate(relOf(t.release).date):''}</dd>`:''}
     ${t.link?`<dt>Linked</dt><dd><span class="link">↗ ${esc(t.link)}</span></dd>`:''}
     ${t.due?`<dt>Due</dt><dd>${fmtDate(t.due)}</dd>`:''}
     ${(t.tags||[]).length?`<dt>Tags</dt><dd>${t.tags.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</dd>`:''}
@@ -490,8 +536,8 @@ const cardShort = t => { const o=S.open.has(t.key), k=esc(t.key); return `
   <article class="${cardCls(t)} short${o?' open':''}" data-key="${k}">
     <div class="top">${typeTag(t.type)}<span class="key">${k}</span><span class="src">${esc(SRC[t.source]||t.source)}</span></div>
     <h3>${esc(t.title)}</h3>
-    <div class="ctx"><b>${esc(t.client)}</b>${t.project?' · '+esc(t.project):''}</div>
-    <div class="foot">${who(t)}${prio(t.priority)}</div>
+    <div class="ctx">${modTag(t)}<span class="p"><b>${esc(t.client)}</b>${t.project?' · '+esc(t.project):''}</span></div>
+    <div class="foot">${ownerSlot(t)}${prio(t.priority)}</div>
     <div class="slarow">${sla(t.sla)}<button class="unfold" type="button" aria-expanded="${o}" data-act="unfold" data-key="${k}">Details ${I.down}</button></div>
     ${meter(t.sla)}
     ${o?detail(t):''}
@@ -499,7 +545,9 @@ const cardShort = t => { const o=S.open.has(t.key), k=esc(t.key); return `
 const cardDetail = t => `
   <article class="${cardCls(t)}" data-key="${esc(t.key)}">
     <div class="top">${typeTag(t.type)}<span class="key">${esc(t.key)}</span><span class="src">${esc(SRC[t.source]||t.source)}</span>${prio(t.priority)}</div>
-    <h3>${esc(t.title)}</h3>${detail(t)}
+    <h3>${esc(t.title)}</h3>
+    ${t.module?`<div class="ctx">${modTag(t)}<span class="p"><b>${esc(t.client)}</b></span></div>`:''}
+    ${detail(t)}
   </article>`;
 
 function groups(list){
@@ -529,6 +577,7 @@ function colHead(name, list){
   let lead = `<span class="nm">${esc(name)}</span>`;
   if(S.group==='type'){ const k=Object.keys(TYPE).find(k=>TYPE[k]===name); if(k) lead = typeTag(k); }
   if(S.group==='prio'){ lead = prio(+name.slice(1)); }
+  if(S.group==='release'){ const r=(CFG.releases||[]).find(x=>relLabel(x.name)===name); lead = `<div style="min-width:0"><div class="nm">${esc(name)}</div><div class="sub">${r?'Ships '+fmtDate(r.date):name==='Backlog'?'Not scheduled yet':'No release set'}</div></div>`; }
   if(S.group==='sla'){ const k=SLAORD.find(s=>SLAN[s]===name); lead = `<span class="sla" style="--sc:${SC[k]}">${k==='paused'?I.pause:I.clock}${esc(name)}</span>`; }
   return `<div class="colh">${lead}<span class="cnt">${list.length}</span></div>${flags}`;
 }
@@ -542,11 +591,11 @@ function renderBoard(){
   if(!list.length){ b.innerHTML = `<div class="state"><b>No tasks match</b>Try removing a filter.<button class="clear" type="button" data-act="clearall">Clear filters</button></div>`; return; }
   if(S.layout==='ledger'){
     b.innerHTML = `<div class="lwrap"><div class="ledger">
-      <div class="r hd"><span></span><span>Pri</span><span>Type</span><span>Key</span><span>Title</span><span>Client</span><span>Owner</span><span>Stage</span><span>SLA</span></div>
+      <div class="r hd"><span></span><span>Pri</span><span>Type</span><span>Key</span><span>Title</span><span>Client</span><span>Module</span><span>Owner</span><span>Stage</span><span>SLA</span></div>
       ${gs.filter(([,v])=>v.length).map(([g,v])=>`<div class="gh">${esc(g)} <span class="cnt">${v.length}</span></div>
         ${v.map(t=>{const o=S.open.has(t.key);return `<div class="r ${t.sla.s==='breach'||t.sla.s==='risk'?'flag':''}" tabindex="0" role="button" aria-expanded="${o}" data-act="row" data-key="${esc(t.key)}">
           <span class="chev">${I.right}</span><span style="color:${PC[t.priority]}" class="prio">${bars(t.priority)}</span>${typeTag(t.type,true)}
-          <span class="key">${esc(t.key)}</span><span class="t">${esc(t.title)}</span><span class="c">${esc(t.client)}</span>${who(t)}
+          <span class="key">${esc(t.key)}</span><span class="t">${esc(t.title)}</span><span class="c">${esc(t.client)}</span><span class="c">${esc(t.module||'')}</span>${ownerSlot(t)}
           <span class="c">${STAGES[t.stage]}</span><span>${sla(t.sla)}</span></div>${o?`<div class="rx">${detail(t)}</div>`:''}`}).join('')}`).join('')}
     </div></div>`;
     return;
@@ -630,11 +679,16 @@ function filterMenu(k){
 }
 function assignMenu(t){
   const open = ALL.filter(x=>x.stage<5); const load = id => open.filter(x=>x.owner===id).length;
-  return `<h6>Assign ${esc(t.key)} to</h6>` + CFG.teams.map(team=>{
-    const ppl = Object.entries(PEOPLE).filter(([,p])=>p.team===team); if(!ppl.length) return '';
-    return `<h6>${esc(team)}</h6>` + ppl.map(([id,p])=>{const n=load(id);
-      return `<button class="opt${t.owner===id?' sel':''}" type="button" role="menuitem" data-assign="${esc(id)}" data-key="${esc(t.key)}">${av(id)}${esc(p.name)}<span class="load" title="${n} open tasks">${[1,2,3,4].map(i=>`<i class="${i<=n?'on'+(n>=4?' hi':''):''}"></i>`).join('')}</span></button>`}).join('');
-  }).join('') + (t.owner?`<h6>Or</h6><button class="opt" type="button" data-assign="" data-key="${esc(t.key)}"><span class="av none">?</span>Unassign, back to ${esc(teamOf(t))} queue</button>`:'');
+  const row = ([id,p]) => { const n=load(id);
+    return `<button class="opt${t.owner===id?' sel':''}" type="button" role="menuitem" data-assign="${esc(id)}" data-key="${esc(t.key)}">${av(id)}${esc(p.name)}<span class="load" title="${n} open tasks">${[1,2,3,4].map(i=>`<i class="${i<=n?'on'+(n>=4?' hi':''):''}"></i>`).join('')}</span></button>`; };
+  const team = teamOf(t);
+  const suggested = Object.entries(PEOPLE).filter(([,p])=>p.team===team).sort((a,b)=>load(a[0])-load(b[0]));
+  let h = `<h6>Assign ${esc(t.key)}</h6>`;
+  if(!t.owner && S.me) h += `<button class="opt tk" type="button" data-act="take" data-key="${esc(t.key)}">${av(S.me)}Take it myself</button>`;
+  if(suggested.length) h += `<h6>Suggested · ${esc(team)}, lightest load first</h6>` + suggested.map(row).join('');
+  h += CFG.teams.filter(x=>x!==team).map(tm=>{ const ppl = Object.entries(PEOPLE).filter(([,p])=>p.team===tm); return ppl.length?`<h6>${esc(tm)}</h6>`+ppl.map(row).join(''):''; }).join('');
+  if(t.owner) h += `<h6>Or</h6><button class="opt" type="button" data-assign="" data-key="${esc(t.key)}"><span class="av none">?</span>Unassign, back to ${esc(team)} queue</button>`;
+  return h;
 }
 const stageMenu = t => `<h6>Move ${esc(t.key)} to</h6>` + STAGES.map((s,i)=>`<button class="opt${i===t.stage?' sel':''}" type="button" data-setstage="${i}" data-key="${esc(t.key)}">${s}</button>`).join('');
 
@@ -700,7 +754,7 @@ document.addEventListener('click', e=>{
   switch(d.act){
     case 'clearall': S.filters={}; S.quick=null; S.q=''; document.getElementById('q').value=''; render(); return;
     case 'unfold': case 'row': S.open.has(t.key)?S.open.delete(t.key):S.open.add(t.key); renderBoard(); return;
-    case 'take': patch(t, {owner:S.me}, `${meName()} took this task`, `${t.key} is now yours`); return;
+    case 'take': closePop(); patch(t, {owner:S.me}, `${meName()} took this task`, `${t.key} is now yours`); return;
     case 'assign': openPop(el, assignMenu(t), 'a-'+t.key); return;
     case 'stage': openPop(el, stageMenu(t), 's-'+t.key); return;
     case 'respond': patch(t, {firstResponseAt:nowIso()}, `First response sent by ${meName()}`, `${t.key}: first response logged, resolution clock running`); return;
@@ -742,13 +796,13 @@ document.getElementById('asSel').addEventListener('change', e=>{ S.me=e.target.v
 window.addEventListener('hashchange', ()=>applyView(location.hash.slice(1)));
 
 /* ---------- create / edit drawer ---------- */
-let newType = 'bug', editing = null;
+let newType = 'internal', editing = null;
 const drawer = document.getElementById('drawerWrap');
 const opts = (list, sel) => list.map(x=>`<option${x===sel?' selected':''}>${esc(x)}</option>`).join('');
 function openDrawer(t){
   if(!canW()) return;
-  editing = t || null; newType = t ? t.type : 'bug';
-  const fc = S.filters.client && S.filters.client.size===1 ? [...S.filters.client][0] : CFG.clients[0];
+  editing = t || null; newType = t ? t.type : 'internal';
+  const fc = CFG.clients.includes('Coral Technology') ? 'Coral Technology' : CFG.clients[0];
   document.getElementById('fHead').textContent = t ? `Edit ${t.key}` : 'New task';
   document.getElementById('fSub').textContent = t ? 'Changes save for everyone and are added to the task history.' : 'It lands in Triage. Leave the owner empty to put it in a team queue.';
   document.getElementById('fSubmit').textContent = t ? 'Save changes' : 'Create task';
@@ -758,6 +812,9 @@ function openDrawer(t){
   document.getElementById('fProject').innerHTML = '<option value="">No project</option>' + opts(CFG.projects, t ? t.project : null);
   document.getElementById('fOwner').innerHTML = '<option value="">Leave unassigned</option>' + Object.entries(PEOPLE).map(([id,p])=>`<option value="${esc(id)}"${t&&t.owner===id?' selected':''}>${esc(p.name)} · ${esc(p.team)}</option>`).join('');
   document.getElementById('fQueue').innerHTML = opts(CFG.teams, t ? t.queue : (S.me&&PEOPLE[S.me]?PEOPLE[S.me].team:CFG.teams[0]));
+  document.getElementById('fModule').innerHTML = '<option value="">Not set</option>' + opts(CFG.modules||[], t ? t.module : null);
+  document.getElementById('fRelease').innerHTML = '<option value="">Not scheduled</option><option value="Backlog"'+(t&&t.release==='Backlog'?' selected':'')+'>Backlog</option>'
+    + (CFG.releases||[]).map(r=>`<option value="${esc(r.name)}"${t&&t.release===r.name?' selected':''}>Release ${esc(r.name)} · ${fmtDate(r.date)}</option>`).join('');
   document.getElementById('fDue').value = t && t.due ? t.due : '';
   document.getElementById('fLink').value = t && t.link ? t.link : '';
   document.getElementById('fNotes').value = t ? (t.notes||'') : '';
@@ -776,12 +833,13 @@ document.getElementById('form').addEventListener('submit', e=>{
   if(!title){ document.getElementById('fErr').hidden=false; document.getElementById('fTitle').focus(); return; }
   const owner = document.getElementById('fOwner').value || null;
   const f = {title, type:newType, client:document.getElementById('fClient').value, priority:+document.getElementById('fPrio').value,
-    project:document.getElementById('fProject').value || null, owner, queue: owner && PEOPLE[owner] ? PEOPLE[owner].team : document.getElementById('fQueue').value,
+    project:document.getElementById('fProject').value || null, owner,
+    module:document.getElementById('fModule').value || null, release:document.getElementById('fRelease').value || null, queue: owner && PEOPLE[owner] ? PEOPLE[owner].team : document.getElementById('fQueue').value,
     due:document.getElementById('fDue').value || null, link:document.getElementById('fLink').value.trim() || null, notes:document.getElementById('fNotes').value.trim()};
   if(editing){
     const t = editing; const changed = Object.keys(f).filter(k=>(f[k]??null)!==(t[k]??null));
     closeDrawer(); if(!changed.length) return;
-    const label = {title:'title',type:'type',client:'client',priority:'priority',project:'project',owner:'owner',queue:'queue',due:'due date',link:'linked item',notes:'notes'};
+    const label = {module:'module',release:'release',title:'title',type:'type',client:'client',priority:'priority',project:'project',owner:'owner',queue:'queue',due:'due date',link:'linked item',notes:'notes'};
     patch(t, f, `${meName()} changed ${changed.map(k=>label[k]).join(', ')}`, `${t.key} updated`);
     return;
   }
