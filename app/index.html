@@ -796,13 +796,13 @@ document.getElementById('asSel').addEventListener('change', e=>{ S.me=e.target.v
 window.addEventListener('hashchange', ()=>applyView(location.hash.slice(1)));
 
 /* ---------- create / edit drawer ---------- */
-let newType = 'bug', editing = null;
+let newType = 'internal', editing = null;
 const drawer = document.getElementById('drawerWrap');
 const opts = (list, sel) => list.map(x=>`<option${x===sel?' selected':''}>${esc(x)}</option>`).join('');
 function openDrawer(t){
   if(!canW()) return;
-  editing = t || null; newType = t ? t.type : 'bug';
-  const fc = S.filters.client && S.filters.client.size===1 ? [...S.filters.client][0] : CFG.clients[0];
+  editing = t || null; newType = t ? t.type : 'internal';
+  const fc = CFG.clients.includes('Coral Technology') ? 'Coral Technology' : CFG.clients[0];
   document.getElementById('fHead').textContent = t ? `Edit ${t.key}` : 'New task';
   document.getElementById('fSub').textContent = t ? 'Changes save for everyone and are added to the task history.' : 'It lands in Triage. Leave the owner empty to put it in a team queue.';
   document.getElementById('fSubmit').textContent = t ? 'Save changes' : 'Create task';
