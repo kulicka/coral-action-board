@@ -370,7 +370,7 @@ const DEF_CFG = {
 
 let CFG = DEF_CFG, PEOPLE = {}, TASKS = [], SAVED = {};
 let DB = null, WRITE = null, LOADED = {tasks:false}, OFFLINE = false;
-const S = {view:'all', layout:'short', group:'stage', sort:'urgency', q:'', quick:null, filters:{}, open:new Set(), fresh:null, me:null};
+const S = {view:'all', layout:'short', group:'stage', sort:'prio', q:'', quick:null, filters:{}, open:new Set(), fresh:null, me:null};
 try { S.me = localStorage.getItem('board.as'); } catch(e) {}
 
 /* ---------- derived values ---------- */
@@ -385,9 +385,9 @@ function planned(t, now){
   const r = relOf(t.release);
   if(!r) return {s:'sched',label:relLabel(t.release),used:0,kind:'Scheduled',target:relLabel(t.release)};
   const end = Date.parse(r.date+'T23:59:59Z'), left = mins(end-now);
-  if(left<0) return {s:'breach',label:`Missed ${relLabel(t.release)}`,used:100,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+  if(left<0) return {s:'breach',left,label:`Missed ${relLabel(t.release)}`,used:100,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
   const start = Date.parse(t.createdAt), used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
-  return {s:'sched',label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
+  return {s:'sched',left,label:`${t.release} · ${fmtDate(r.date)}`,used,kind:'Scheduled',target:`${relLabel(t.release)} · ${fmtDate(r.date)}`};
 }
 function slaOf(t, now){
   if(t.stage===DONE) return {s:'none',label:'Done '+ago(t.resolvedAt||t.updatedAt),used:0,kind:'None',target:''};
@@ -401,16 +401,16 @@ function slaOf(t, now){
       const used = Math.min(100, Math.max(0, elapsed/target*100));
       const kind = first?'First response':'Resolution', tg = `${fmtDur(target)} · ${ov?t.client+' contract':'standard'}, P${t.priority}`;
       if(t.pausedSince) return {s:'paused',label:'Paused · waiting on client',used,kind,target:tg};
-      if(left<=0) return {s:'breach',label:`Breached ${fmtDur(-left)} ago`,used:100,kind,target:tg};
-      return {s:used>=75?'risk':'ok',label:`${fmtDur(left)} to ${first?'first response':'resolve'}`,used,kind,target:tg};
+      if(left<=0) return {s:'breach',left,label:`Breached ${fmtDur(-left)} ago`,used:100,kind,target:tg};
+      return {s:used>=75?'risk':'ok',left,label:`${fmtDur(left)} to ${first?'first response':'resolve'}`,used,kind,target:tg};
     }
   }
   if(t.due){
     const end = Date.parse(t.due+'T23:59:59Z'), start = Date.parse(t.createdAt), left = mins(end-now);
     const used = Math.min(100, Math.max(0, (now-start)/Math.max(1,end-start)*100));
-    if(left<0) return {s:'breach',label:`Overdue ${fmtDur(-left)}`,used:100,kind:'Due date',target:fmtDate(t.due)};
+    if(left<0) return {s:'breach',left,label:`Overdue ${fmtDur(-left)}`,used:100,kind:'Due date',target:fmtDate(t.due)};
     const today = new Date(now).toISOString().slice(0,10);
-    return {s:left<1440?'risk':'ok',label:t.due===today?'Due today':'Due '+fmtDate(t.due),used,kind:'Due date',target:fmtDate(t.due)};
+    return {s:left<1440?'risk':'ok',left,label:t.due===today?'Due today':'Due '+fmtDate(t.due),used,kind:'Due date',target:fmtDate(t.due)};
   }
   if(t.release) return planned(t, now);
   return {s:'none',label:'No SLA',used:0,kind:'None',target:''};
@@ -433,7 +433,7 @@ const FIELDS = {
 };
 const FILTER_KEYS = ['client','module','project','release','team','owner','type','prio','sla'];
 const GROUP_KEYS = ['stage','owner','client','module','project','release','team','prio','type','sla'];
-const SORTS = {urgency:'Most urgent first', prio:'Priority', client:'Client', newest:'Newest first'};
+const SORTS = {prio:'Priority, then time to respond', urgency:'Most urgent first', client:'Client', newest:'Newest first'};
 const QUICK = {
   attention:{label:'Needs attention', fn:t=>!t.owner||t.sla.s==='risk'||t.sla.s==='breach'},
   planned:{label:'Scheduled or in the backlog', fn:t=>!!t.release},
@@ -457,7 +457,7 @@ function applyView(v){
   let d = viewDef(v);
   if(!d && v.startsWith('sv-') && !LOADED.views){ S.view=v; d=VIEWS.all; }
   else if(!d){ v='all'; d=VIEWS.all; }
-  if(viewDef(v)||!v.startsWith('sv-')) S.view=v; S.layout=d.layout||'short'; S.group=d.group||'stage'; S.sort=d.sort||'urgency'; S.quick=d.quick||null; S.open.clear();
+  if(viewDef(v)||!v.startsWith('sv-')) S.view=v; S.layout=d.layout||'short'; S.group=d.group||'stage'; S.sort=d.sort||'prio'; S.quick=d.quick||null; S.open.clear();
   S.filters={}; Object.entries(d.filters||{}).forEach(([k,vals])=>S.filters[k]=new Set(vals));
   render();
 }
@@ -471,11 +471,13 @@ let ALL = [];
 const showDone = () => !!viewDef(S.view)?.done;
 const visible = () => ALL.filter(t=>(showDone()?t.stage===DONE:t.stage<DONE) && matches(t));
 const urgency = t => SLAORD.indexOf(t.sla.s)*10 + t.priority;
+// Minutes until the SLA, due date or release; overdue is negative. Paused and unscheduled work goes last.
+const timeLeft = t => t.sla.left ?? 1e9;
 function sorted(list){
-  const by = {urgency:(a,b)=>urgency(a)-urgency(b), prio:(a,b)=>a.priority-b.priority||urgency(a)-urgency(b),
+  const by = {urgency:(a,b)=>urgency(a)-urgency(b), prio:(a,b)=>a.priority-b.priority||timeLeft(a)-timeLeft(b)||urgency(a)-urgency(b),
     client:(a,b)=>a.client.localeCompare(b.client)||urgency(a)-urgency(b),
     newest:(a,b)=>(b.resolvedAt||b.createdAt||'').localeCompare(a.resolvedAt||a.createdAt||'')};
-  return list.slice().sort(by[S.sort]||by.urgency);
+  return list.slice().sort(by[S.sort]||by.prio);
 }
 
 /* ---------- atoms ---------- */
