@@ -77,7 +77,7 @@ CREATE TABLE dbo.task (
                        ('portal','email','teams','jira','ado','board')),
     priority           TINYINT       NOT NULL CONSTRAINT ck_task_priority CHECK (priority BETWEEN 1 AND 4),
     stage              VARCHAR(20)   NOT NULL CONSTRAINT df_task_stage DEFAULT ('triage')
-                       CONSTRAINT ck_task_stage CHECK (stage IN ('triage','queued','in_progress','in_dev','verify','done')),
+                       CONSTRAINT ck_task_stage CHECK (stage IN ('triage','queued','in_progress','in_dev','ready_for_test','ready_to_publish','done')),
     client_id          INT NOT NULL CONSTRAINT fk_task_client  REFERENCES dbo.client(client_id),
     product_id         INT NULL     CONSTRAINT fk_task_product REFERENCES dbo.product(product_id),
     project_id         INT NULL     CONSTRAINT fk_task_project REFERENCES dbo.project(project_id),

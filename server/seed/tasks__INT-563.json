@@ -9,7 +9,7 @@
  "owner": null,
  "queue": "Product",
  "stage": 0,
- "createdAt": "2026-10-23T00:11:24Z",
+ "createdAt": "2026-10-23T00:41:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,9 +24,9 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-23T00:11:24Z",
+   "at": "2026-10-23T00:41:42Z",
    "text": "Created from the board"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

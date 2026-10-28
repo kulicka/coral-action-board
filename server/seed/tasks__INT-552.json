@@ -9,7 +9,7 @@
  "owner": "PN",
  "queue": "Platform",
  "stage": 2,
- "createdAt": "2026-10-25T02:11:24Z",
+ "createdAt": "2026-10-25T02:41:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,17 +24,17 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-25T02:11:24Z",
+   "at": "2026-10-25T02:41:42Z",
    "text": "Created from Azure DevOps"
   },
   {
-   "at": "2026-10-25T02:41:24Z",
+   "at": "2026-10-25T03:11:42Z",
    "text": "Assigned to Priya Nair"
   },
   {
-   "at": "2026-10-28T10:31:24Z",
+   "at": "2026-10-28T11:01:42Z",
    "text": "Priya updated in Azure DevOps"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

@@ -9,7 +9,7 @@
  "owner": null,
  "queue": "Product",
  "stage": 0,
- "createdAt": "2026-10-23T13:31:24Z",
+ "createdAt": "2026-10-23T14:01:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,13 +24,13 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-23T13:31:24Z",
+   "at": "2026-10-23T14:01:42Z",
    "text": "Created from email"
   },
   {
-   "at": "2026-10-28T10:31:24Z",
+   "at": "2026-10-28T11:01:42Z",
    "text": "Asked for by Paramount and NBCU"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

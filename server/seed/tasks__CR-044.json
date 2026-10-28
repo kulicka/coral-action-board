@@ -8,12 +8,12 @@
  "priority": 2,
  "owner": "DA",
  "queue": "Development",
- "stage": 5,
- "createdAt": "2026-10-20T05:31:24Z",
+ "stage": 6,
+ "createdAt": "2026-10-20T06:01:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
- "resolvedAt": "2026-10-25T05:31:24Z",
+ "resolvedAt": "2026-10-25T06:01:42Z",
  "due": null,
  "module": "Platform",
  "release": null,
@@ -24,21 +24,21 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-20T05:31:24Z",
+   "at": "2026-10-20T06:01:42Z",
    "text": "Created from Jira"
   },
   {
-   "at": "2026-10-20T06:01:24Z",
+   "at": "2026-10-20T06:31:42Z",
    "text": "Assigned to Diego Alvarez"
   },
   {
-   "at": "2026-10-25T05:31:24Z",
+   "at": "2026-10-25T06:01:42Z",
    "text": "Moved to Done"
   },
   {
-   "at": "2026-10-28T10:31:24Z",
+   "at": "2026-10-28T11:01:42Z",
    "text": "Released in 4.11"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

@@ -8,12 +8,12 @@
  "priority": 2,
  "owner": "MC",
  "queue": "Development",
- "stage": 5,
- "createdAt": "2026-10-24T09:31:24Z",
- "firstResponseAt": "2026-10-24T10:31:24Z",
+ "stage": 6,
+ "createdAt": "2026-10-24T10:01:42Z",
+ "firstResponseAt": "2026-10-24T11:01:42Z",
  "pausedSince": null,
  "pausedMins": 0,
- "resolvedAt": "2026-10-26T21:31:24Z",
+ "resolvedAt": "2026-10-26T22:01:42Z",
  "due": null,
  "module": "Platform",
  "release": null,
@@ -24,25 +24,25 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-24T09:31:24Z",
+   "at": "2026-10-24T10:01:42Z",
    "text": "Created from email"
   },
   {
-   "at": "2026-10-24T10:01:24Z",
+   "at": "2026-10-24T10:31:42Z",
    "text": "Assigned to Maya Chen"
   },
   {
-   "at": "2026-10-24T10:31:24Z",
+   "at": "2026-10-24T11:01:42Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-26T21:31:24Z",
+   "at": "2026-10-26T22:01:42Z",
    "text": "Moved to Done"
   },
   {
-   "at": "2026-10-28T10:31:24Z",
+   "at": "2026-10-28T11:01:42Z",
    "text": "Fix deployed and confirmed by NBCU"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }

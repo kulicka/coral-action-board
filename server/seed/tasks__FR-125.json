@@ -9,7 +9,7 @@
  "owner": "RB",
  "queue": "Product",
  "stage": 0,
- "createdAt": "2026-10-28T03:31:24Z",
+ "createdAt": "2026-10-28T04:01:42Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,13 +24,13 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-28T03:31:24Z",
+   "at": "2026-10-28T04:01:42Z",
    "text": "Created from the board"
   },
   {
-   "at": "2026-10-28T04:01:24Z",
+   "at": "2026-10-28T04:31:42Z",
    "text": "Assigned to Rosa Bianchi"
   }
  ],
- "updatedAt": "2026-10-28T13:31:24Z"
+ "updatedAt": "2026-10-28T14:01:42Z"
 }
