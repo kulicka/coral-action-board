@@ -187,7 +187,7 @@ L.append("       CASE WHEN v.stage = 'done' THEN DATEADD(MINUTE, -v.age * 4 / 10
 L.append('       CASE WHEN v.due_days IS NOT NULL THEN CAST(DATEADD(DAY, v.due_days, @now) AS DATE) END,')
 L.append('       v.external_ref, v.notes')
 L.append('FROM (VALUES')
-STAGE = ['triage', 'ready', 'in_progress', 'in_dev', 'verify', 'done']
+STAGE = ['triage', 'queued', 'in_progress', 'in_dev', 'verify', 'done']
 vals = []
 for (key, typ, src, title, client, project, prio, owner, queue, stage, age, fr, paused, due, link, tags, last, notes) in T:
     n = lambda x: 'NULL' if x is None else str(x)
