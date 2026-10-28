@@ -1,0 +1,33 @@
+# Fly.io config for the Coral MSP action board.
+# First deploy: see "Deploy to Fly.io" in README.md.
+app = "coral-action-board"        # change if the name is taken
+primary_region = "iad"            # use the region your other apps run in
+
+[build]
+
+[env]
+  PORT = "8080"
+  DB_PATH = "/data/board.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/healthz"
+    timeout = "5s"
+
+# SQLite lives on this volume, so run exactly one machine.
+[[mounts]]
+  source = "board_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

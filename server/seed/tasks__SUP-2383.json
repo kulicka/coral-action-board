@@ -1,0 +1,36 @@
+{
+ "key": "SUP-2383",
+ "type": "bug",
+ "source": "portal",
+ "title": "Thumbnail generation fails for 4K uploads",
+ "client": "Netflix",
+ "project": "Netflix onboarding",
+ "priority": 2,
+ "owner": null,
+ "queue": "Development",
+ "stage": 1,
+ "createdAt": "2026-10-28T10:21:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Media"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T10:21:24Z",
+   "text": "Created from support portal"
+  },
+  {
+   "at": "2026-10-28T12:53:24Z",
+   "text": "Escalated from Support L1"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

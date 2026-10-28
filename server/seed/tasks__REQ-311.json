@@ -1,0 +1,32 @@
+{
+ "key": "REQ-311",
+ "type": "request",
+ "source": "email",
+ "title": "Set up 40 user accounts for the new production team",
+ "client": "Netflix",
+ "project": "Netflix onboarding",
+ "priority": 3,
+ "owner": null,
+ "queue": "Support L1",
+ "stage": 0,
+ "createdAt": "2026-10-28T11:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Accounts"
+ ],
+ "notes": "Spreadsheet of names attached to the original email.",
+ "history": [
+  {
+   "at": "2026-10-28T11:31:24Z",
+   "text": "Created from email"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

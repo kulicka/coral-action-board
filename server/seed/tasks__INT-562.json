@@ -1,0 +1,36 @@
+{
+ "key": "INT-562",
+ "type": "internal",
+ "source": "board",
+ "title": "Remove stale feature flags",
+ "client": "Coral Technology",
+ "project": null,
+ "priority": 4,
+ "owner": "OH",
+ "queue": "Development",
+ "stage": 1,
+ "createdAt": "2026-10-22T07:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Tech debt"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-22T07:31:24Z",
+   "text": "Created from the board"
+  },
+  {
+   "at": "2026-10-22T08:01:24Z",
+   "text": "Assigned to Omar Haddad"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

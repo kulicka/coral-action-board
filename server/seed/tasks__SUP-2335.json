@@ -1,0 +1,40 @@
+{
+ "key": "SUP-2335",
+ "type": "bug",
+ "source": "email",
+ "title": "Royalty statement totals round differently from invoices",
+ "client": "Paramount",
+ "project": null,
+ "priority": 4,
+ "owner": null,
+ "queue": "Support L2",
+ "stage": 1,
+ "createdAt": "2026-10-18T03:31:24Z",
+ "firstResponseAt": "2026-10-18T05:31:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Finance",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Royalties"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-18T03:31:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-18T05:31:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Parked in the backlog"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

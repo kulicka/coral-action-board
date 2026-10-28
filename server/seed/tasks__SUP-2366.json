@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2366",
+ "type": "question",
+ "source": "email",
+ "title": "Which IP ranges should Paramount allowlist?",
+ "client": "Paramount",
+ "project": null,
+ "priority": 4,
+ "owner": "JR",
+ "queue": "Support L1",
+ "stage": 2,
+ "createdAt": "2026-10-27T20:51:24Z",
+ "firstResponseAt": "2026-10-28T00:11:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Network"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-27T20:51:24Z",
+   "text": "Created from email"
+  },
+  {
+   "at": "2026-10-27T21:21:24Z",
+   "text": "Assigned to Jon Ruiz"
+  },
+  {
+   "at": "2026-10-28T00:11:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Jon drafted a reply"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

@@ -1,0 +1,40 @@
+{
+ "key": "FR-121",
+ "type": "feature",
+ "source": "teams",
+ "title": "Saved filters on the content dashboard",
+ "client": "NBCU",
+ "project": "Product backlog",
+ "priority": 4,
+ "owner": "RB",
+ "queue": "Product",
+ "stage": 1,
+ "createdAt": "2026-10-25T10:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Reporting",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Dashboards"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-25T10:31:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-25T11:01:24Z",
+   "text": "Assigned to Rosa Bianchi"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Rosa added it to the Q1 shortlist"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

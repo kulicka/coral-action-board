@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2388",
+ "type": "incident",
+ "source": "portal",
+ "title": "TVOD purchases failing on the Canadian storefront",
+ "client": "Netflix",
+ "project": null,
+ "priority": 1,
+ "owner": null,
+ "queue": "Support L2",
+ "stage": 0,
+ "createdAt": "2026-10-28T13:21:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Payments"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T13:21:24Z",
+   "text": "Created from support portal"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

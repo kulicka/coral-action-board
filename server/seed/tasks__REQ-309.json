@@ -1,0 +1,44 @@
+{
+ "key": "REQ-309",
+ "type": "request",
+ "source": "portal",
+ "title": "Enable API access for a new integration partner",
+ "client": "Paramount",
+ "project": "Paramount reporting rollout",
+ "priority": 3,
+ "owner": "HS",
+ "queue": "Support L1",
+ "stage": 2,
+ "createdAt": "2026-10-24T16:11:24Z",
+ "firstResponseAt": "2026-10-24T21:11:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": null,
+ "link": null,
+ "tags": [
+  "API"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-24T16:11:24Z",
+   "text": "Created from support portal"
+  },
+  {
+   "at": "2026-10-24T16:41:24Z",
+   "text": "Assigned to Hana Sato"
+  },
+  {
+   "at": "2026-10-24T21:11:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Waiting on security sign-off"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

@@ -1,0 +1,32 @@
+{
+ "key": "SUP-2385",
+ "type": "question",
+ "source": "portal",
+ "title": "Can we schedule exports to an SFTP folder?",
+ "client": "Fox",
+ "project": null,
+ "priority": 4,
+ "owner": null,
+ "queue": "Support L1",
+ "stage": 0,
+ "createdAt": "2026-10-28T13:01:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Exports"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T13:01:24Z",
+   "text": "Created from support portal"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

@@ -1,0 +1,44 @@
+{
+ "key": "SUP-2379",
+ "type": "bug",
+ "source": "portal",
+ "title": "Dashboard widgets show UTC instead of local time",
+ "client": "AMC",
+ "project": null,
+ "priority": 3,
+ "owner": "HS",
+ "queue": "Support L1",
+ "stage": 1,
+ "createdAt": "2026-10-27T12:31:24Z",
+ "firstResponseAt": "2026-10-27T15:51:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Reporting",
+ "release": "4.13",
+ "link": null,
+ "tags": [
+  "Reporting"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-27T12:31:24Z",
+   "text": "Created from support portal"
+  },
+  {
+   "at": "2026-10-27T13:01:24Z",
+   "text": "Assigned to Hana Sato"
+  },
+  {
+   "at": "2026-10-27T15:51:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Reproduced by Hana"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

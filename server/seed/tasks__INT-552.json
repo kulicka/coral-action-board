@@ -1,0 +1,40 @@
+{
+ "key": "INT-552",
+ "type": "internal",
+ "source": "ado",
+ "title": "Upgrade staging database to SQL Server 2022",
+ "client": "Coral Technology",
+ "project": "Coral MSP 4.12 release",
+ "priority": 2,
+ "owner": "PN",
+ "queue": "Platform",
+ "stage": 2,
+ "createdAt": "2026-10-25T02:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": "2026-11-03",
+ "module": "Platform",
+ "release": "4.12",
+ "link": "Azure DevOps #8812",
+ "tags": [
+  "Release blocker"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-25T02:11:24Z",
+   "text": "Created from Azure DevOps"
+  },
+  {
+   "at": "2026-10-25T02:41:24Z",
+   "text": "Assigned to Priya Nair"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Priya updated in Azure DevOps"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

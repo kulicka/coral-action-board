@@ -1,0 +1,36 @@
+{
+ "key": "FR-127",
+ "type": "feature",
+ "source": "teams",
+ "title": "TVOD price tiers by territory",
+ "client": "NBCU",
+ "project": "Product backlog",
+ "priority": 4,
+ "owner": "RB",
+ "queue": "Product",
+ "stage": 1,
+ "createdAt": "2026-10-20T05:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Pricing"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-20T05:31:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-20T06:01:24Z",
+   "text": "Assigned to Rosa Bianchi"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

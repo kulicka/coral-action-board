@@ -1,0 +1,36 @@
+{
+ "key": "FR-125",
+ "type": "feature",
+ "source": "board",
+ "title": "Webhook notifications for task updates",
+ "client": "Coral Technology",
+ "project": "Product backlog",
+ "priority": 3,
+ "owner": "RB",
+ "queue": "Product",
+ "stage": 0,
+ "createdAt": "2026-10-28T03:31:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "Platform",
+ "release": "4.13",
+ "link": null,
+ "tags": [
+  "Integrations"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-28T03:31:24Z",
+   "text": "Created from the board"
+  },
+  {
+   "at": "2026-10-28T04:01:24Z",
+   "text": "Assigned to Rosa Bianchi"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

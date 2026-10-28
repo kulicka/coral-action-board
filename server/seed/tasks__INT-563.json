@@ -1,0 +1,32 @@
+{
+ "key": "INT-563",
+ "type": "internal",
+ "source": "board",
+ "title": "Document the TVOD settlement process",
+ "client": "Coral Technology",
+ "project": null,
+ "priority": 4,
+ "owner": null,
+ "queue": "Product",
+ "stage": 0,
+ "createdAt": "2026-10-23T00:11:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": null,
+ "module": "TVOD",
+ "release": "Backlog",
+ "link": null,
+ "tags": [
+  "Docs"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-23T00:11:24Z",
+   "text": "Created from the board"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

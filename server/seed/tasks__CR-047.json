@@ -1,0 +1,40 @@
+{
+ "key": "CR-047",
+ "type": "change",
+ "source": "jira",
+ "title": "Raise default session timeout from 30 to 60 minutes",
+ "client": "NBCU",
+ "project": "Coral MSP 4.12 release",
+ "priority": 3,
+ "owner": "LP",
+ "queue": "QA",
+ "stage": 4,
+ "createdAt": "2026-10-25T18:51:24Z",
+ "firstResponseAt": null,
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": null,
+ "due": "2026-11-07",
+ "module": "Platform",
+ "release": "4.12",
+ "link": "Jira DEV-4398",
+ "tags": [
+  "Config"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-25T18:51:24Z",
+   "text": "Created from Jira"
+  },
+  {
+   "at": "2026-10-25T19:21:24Z",
+   "text": "Assigned to Lena Park"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Moved to Verify in Jira"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}

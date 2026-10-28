@@ -1,0 +1,48 @@
+{
+ "key": "SUP-2345",
+ "type": "question",
+ "source": "teams",
+ "title": "Where is the data retention policy documented?",
+ "client": "Fox",
+ "project": null,
+ "priority": 4,
+ "owner": "HS",
+ "queue": "Support L1",
+ "stage": 5,
+ "createdAt": "2026-10-25T02:11:24Z",
+ "firstResponseAt": "2026-10-25T03:41:24Z",
+ "pausedSince": null,
+ "pausedMins": 0,
+ "resolvedAt": "2026-10-27T04:11:24Z",
+ "due": null,
+ "module": "Operations",
+ "release": null,
+ "link": null,
+ "tags": [
+  "Compliance"
+ ],
+ "notes": "",
+ "history": [
+  {
+   "at": "2026-10-25T02:11:24Z",
+   "text": "Created from Teams"
+  },
+  {
+   "at": "2026-10-25T02:41:24Z",
+   "text": "Assigned to Hana Sato"
+  },
+  {
+   "at": "2026-10-25T03:41:24Z",
+   "text": "First response sent"
+  },
+  {
+   "at": "2026-10-27T04:11:24Z",
+   "text": "Moved to Done"
+  },
+  {
+   "at": "2026-10-28T10:31:24Z",
+   "text": "Sent the policy link"
+  }
+ ],
+ "updatedAt": "2026-10-28T13:31:24Z"
+}
