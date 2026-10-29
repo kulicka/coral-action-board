@@ -126,9 +126,11 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .card.unassigned{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
 .card.fresh{box-shadow:0 0 0 1px var(--accent)}
 .card.due{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
-/* Static accent on work that is close to (amber) or past (red) its SLA, due date or release. No motion. */
-.tint{--sh:var(--warn);background-image:linear-gradient(100deg,color-mix(in srgb,var(--sh) 7%,transparent),transparent 55%)}
-.tint.alert{--sh:var(--crit)}
+/* Work close to (amber) or past (red) its SLA, due date or release: faint tint, and a slow glow that breathes on the border only */
+.tint{--sh:var(--warn);--sp:5s;background-image:linear-gradient(100deg,color-mix(in srgb,var(--sh) 7%,transparent),transparent 55%)}
+.tint.alert{--sh:var(--crit);--sp:3.5s}
+.card.tint{animation:breathe var(--sp) ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 1px color-mix(in srgb,var(--sh) 30%,transparent),0 0 14px color-mix(in srgb,var(--sh) 18%,transparent)}}
 .card.short{cursor:pointer}
 .card.short.open{cursor:default}
 .card:hover{border-color:var(--line-strong)}
@@ -236,7 +238,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
   #board>.cols .colhd{position:sticky;top:0;z-index:2;background:var(--col);border-radius:12px 12px 0 0}
   #board>.lwrap .r.hd{position:sticky;top:0;z-index:2;background:var(--surface)}
 }
-@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
+@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}.card.tint{animation:none}}
 .mod{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 5px;white-space:nowrap}
 .card .ctx{display:flex;align-items:center;gap:6px}
 .card .ctx .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
