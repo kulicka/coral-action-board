@@ -110,7 +110,9 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who.un span{color:var(--warn)}
 .sla{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--sc);background:color-mix(in srgb,var(--sc) 12%,transparent);border:1px solid color-mix(in srgb,var(--sc) 35%,transparent);padding:1px 8px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.sla svg{width:11px;height:11px}
+.sla svg{width:11px;height:11px;flex:none}
+.sla{max-width:100%;min-width:0}
+.sla .sl{overflow:hidden;text-overflow:ellipsis}
 .meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--sc)}
 .chip{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 7px;white-space:nowrap}
@@ -119,10 +121,18 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .btn svg{width:10px;height:10px}
 .link{font-family:var(--mono);font-size:11px;color:var(--accent)}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;display:grid;gap:9px;padding:12px 12px 9px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:9px;padding:12px 12px 9px}
 .card.alert{border-color:color-mix(in srgb,var(--crit) 45%,var(--line))}
 .card.unassigned{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
 .card.fresh{box-shadow:0 0 0 1px var(--accent)}
+.card.due{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+/* Shimmer on work that is close to (amber) or past (red) its SLA, due date or release */
+.shimmer{position:relative;overflow:hidden;--sh:var(--warn);--sp:3.2s}
+.shimmer.alert{--sh:var(--crit);--sp:2.2s}
+.shimmer::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:60%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--sh) 16%,transparent) 45%,color-mix(in srgb,var(--sh) 26%,transparent) 50%,color-mix(in srgb,var(--sh) 16%,transparent) 55%,transparent);
+  animation:shimmer var(--sp) ease-in-out infinite}
+@keyframes shimmer{0%{transform:translateX(0)}70%,100%{transform:translateX(270%)}}
 .card.short{cursor:pointer}
 .card.short.open{cursor:default}
 .card:hover{border-color:var(--line-strong)}
@@ -134,7 +144,8 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .card .ctx b{color:var(--fg);font-weight:500}
 .card .foot{display:flex;align-items:center;gap:10px}
 .card .foot .who{flex:1 1 auto}
-.card .slarow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .slarow{display:flex;align-items:center;justify-content:space-between;gap:6px 8px;flex-wrap:wrap}
+.card .slarow .unfold{margin-left:auto}
 .unfold{font-size:11px;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
 .unfold svg{width:11px;height:11px;transition:transform .15s}
 .unfold[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -166,6 +177,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 .r .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r .c{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
 .r.flag{background:color-mix(in srgb,var(--crit) 6%,transparent)}
+.r.flag.due{background:color-mix(in srgb,var(--warn) 5%,transparent)}
 .r .chev{color:var(--faint);display:grid;place-items:center}
 .r .chev svg{width:11px;height:11px;transition:transform .15s}
 .r[aria-expanded="true"] .chev svg{transform:rotate(90deg)}
@@ -228,7 +240,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
   #board>.cols .colhd{position:sticky;top:0;z-index:2;background:var(--col);border-radius:12px 12px 0 0}
   #board>.lwrap .r.hd{position:sticky;top:0;z-index:2;background:var(--surface)}
 }
-@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
+@media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}.shimmer::after{animation:none;display:none}}
 .mod{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 5px;white-space:nowrap}
 .card .ctx{display:flex;align-items:center;gap:6px}
 .card .ctx .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -465,7 +477,7 @@ const bizDay = () => (CFG.calendar.end-CFG.calendar.start)*60;
 const termMins = x => x && UNITS[x.u] && +x.n>0 ? +x.n * {bh:60, bd:bizDay(), h:60, d:1440}[x.u] : null;
 const isBiz = x => !!x && (x.u==='bh' || x.u==='bd');
 const termText = x => !x || !x.u ? 'Not set' : FIXKINDS[x.u] || (UNITS[x.u] ? `${x.n} ${UNITS[x.u][+x.n===1?0:1]}` : 'Not set');
-function fmtBiz(m){ const d = bizDay(); m = Math.max(0, Math.round(m)); if(m<d) return fmtDur(m)+' business'; const n=Math.floor(m/d), h=Math.floor((m%d)/60); return `${n} business day${n>1?'s':''}${h?' '+h+'h':''}`; }
+function fmtBiz(m){ const d = bizDay(); m = Math.max(0, Math.round(m)); if(m<d) return fmtDur(m); const n=Math.floor(m/d), h=Math.floor((m%d)/60); return `${n} bus. day${n>1?'s':''}${h?' '+h+'h':''}`; }
 const termsFor = client => Object.values(TERMS).find(p=>p.client===client) || TERMS._standard || STD_TERMS;
 const termsName = p => p.client==='*' ? 'Coral standard' : p.client + (p.verification==='contract' ? ' contract' : p.verification==='assumed' ? ' (assumed terms)' : ' (terms not confirmed)');
 
@@ -485,7 +497,7 @@ function slaOf(t, now){
                             : mins(now-since) - (t.pausedMins||0) - (ps ? mins(now-ps) : 0);
         const left = target-elapsed, used = Math.min(100, Math.max(0, elapsed/target*100)), fd = biz ? fmtBiz : fmtDur;
         if(t.pausedSince) return {s:'paused',label:'Paused · waiting on client',used,kind,target:tg};
-        if(left<=0) return {s:'breach',left,label:`Breached · over by ${fd(-left)}`,used:100,kind,target:tg};
+        if(left<=0) return {s:'breach',left,label:`Breached by ${fd(-left)}`,used:100,kind,target:tg};
         const off = biz && bizMins(now, now+60000) === 0;
         return {s:used>=75?'risk':'ok',left,label:`${fd(left)} to ${first?'respond':'fix'}${off?' · off hours':''}`,used,kind,target:tg};
       }
@@ -586,9 +598,10 @@ const ownerSlot = t => {
   return `<span class="unbox"><button class="assignbtn" type="button" data-act="assign" data-key="${k}" title="Waiting in the ${esc(t.queue)} queue"><span class="av none">?</span>Assign ${I.down}</button>${S.me?`<button class="takebtn" type="button" data-act="take" data-key="${k}">Take it</button>`:''}</span>`;
 };
 const modTag = t => t.module ? `<span class="mod">${esc(t.module)}</span>` : '';
-const sla = s => `<span class="sla" style="--sc:${SC[s.s]}">${s.s==='paused'?I.pause:I.clock}${esc(s.label)}</span>`;
+const sla = s => `<span class="sla" style="--sc:${SC[s.s]}" title="${esc(s.target ? s.kind+': '+s.target : s.label)}">${s.s==='paused'?I.pause:I.clock}<span class="sl">${esc(s.label)}</span></span>`;
 const meter = s => s.s==='none'?'':`<div class="meter" style="--sc:${SC[s.s]}"><i style="width:${s.used.toFixed(1)}%"></i></div>`;
-const cardCls = t => 'card' + (t.sla.s==='breach'?' alert':'') + (!t.owner&&t.stage<DONE?' unassigned':'') + (S.fresh===t.key?' fresh':'');
+const shim = t => t.sla.s==='breach' ? ' shimmer alert' : t.sla.s==='risk' ? ' shimmer due' : '';
+const cardCls = t => 'card' + shim(t) + (!t.owner&&t.stage<DONE?' unassigned':'') + (S.fresh===t.key?' fresh':'');
 const canW = () => WRITE!==false && DB;
 
 function actions(t){
@@ -685,7 +698,7 @@ function renderBoard(){
     b.innerHTML = `<div class="lwrap"><div class="ledger">
       <div class="r hd"><span></span><span>Pri</span><span>Type</span><span>Key</span><span>Title</span><span>Client</span><span>Module</span><span>Owner</span><span>Stage</span><span>SLA</span></div>
       ${gs.filter(([,v])=>v.length).map(([g,v])=>`<div class="gh">${esc(g)} <span class="cnt">${v.length}</span></div>
-        ${v.map(t=>{const o=S.open.has(t.key);return `<div class="r ${t.sla.s==='breach'||t.sla.s==='risk'?'flag':''}" tabindex="0" role="button" aria-expanded="${o}" data-act="row" data-key="${esc(t.key)}">
+        ${v.map(t=>{const o=S.open.has(t.key);return `<div class="r${t.sla.s==='breach'||t.sla.s==='risk'?' flag'+shim(t):''}" tabindex="0" role="button" aria-expanded="${o}" data-act="row" data-key="${esc(t.key)}">
           <span class="chev">${I.right}</span><span style="color:${PC[t.priority]}" class="prio">${bars(t.priority)}</span>${typeTag(t.type,true)}
           <span class="key">${esc(t.key)}</span><span class="t">${esc(t.title)}</span><span class="c">${esc(t.client)}</span><span class="c">${esc(t.module||'')}</span>${ownerSlot(t)}
           <span class="c">${STAGES[t.stage]}</span><span>${sla(t.sla)}</span></div>${o?`<div class="rx">${detail(t)}</div>`:''}`}).join('')}`).join('')}
