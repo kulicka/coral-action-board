@@ -82,6 +82,7 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
 /* board columns */
 .cols{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
 .col{flex:0 0 288px;background:var(--col);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-width:0}
+.cols.detail{display:flex;gap:12px}
 .cols.detail .col{flex-basis:340px}
 .colh{display:flex;align-items:center;gap:8px;padding:12px 12px 10px;border-bottom:1px solid var(--line);min-height:50px}
 .colh .nm{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -218,6 +219,14 @@ main{min-width:0;padding-block:22px 64px;padding-left:28px;padding-right:max(20p
   main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .search{flex:1 1 100%}
   .col{flex-basis:84vw}
+}
+/* Fit the board to the window so its horizontal scrollbar is always on screen */
+@media (min-width:901px) and (min-height:560px){
+  main{height:100vh;height:100dvh;padding-bottom:12px}
+  #board{flex:1 1 auto;min-height:240px;display:flex;flex-direction:column}
+  #board>.cols,#board>.lwrap{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+  #board>.cols .colhd{position:sticky;top:0;z-index:2;background:var(--col);border-radius:12px 12px 0 0}
+  #board>.lwrap .r.hd{position:sticky;top:0;z-index:2;background:var(--surface)}
 }
 @media (prefers-reduced-motion:reduce){.unfold svg,.r .chev svg{transition:none}}
 .mod{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 5px;white-space:nowrap}
@@ -604,7 +613,7 @@ function renderBoard(){
     return;
   }
   const card = S.layout==='detail'?cardDetail:cardShort;
-  b.innerHTML = `<div class="cols ${S.layout}">${gs.map(([g,v])=>`<section class="col" aria-label="${esc(g)}">${colHead(g,v)}<div class="colb">${v.length?v.map(card).join(''):'<div class="empty">Nothing here</div>'}</div></section>`).join('')}</div>`;
+  b.innerHTML = `<div class="cols ${S.layout}">${gs.map(([g,v])=>`<section class="col" aria-label="${esc(g)}"><div class="colhd">${colHead(g,v)}</div><div class="colb">${v.length?v.map(card).join(''):'<div class="empty">Nothing here</div>'}</div></section>`).join('')}</div>`;
 }
 
 function renderChrome(){
