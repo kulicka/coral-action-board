@@ -3,13 +3,15 @@
 SET NOCOUNT ON;
 DECLARE @now DATETIME2(0) = SYSUTCDATETIME();
 
-INSERT INTO dbo.client (name, support_tier, is_internal) VALUES
-    (N'Paramount', 'Standard', 0),
-    (N'AMC', 'Standard', 0),
-    (N'Netflix', 'Standard', 0),
-    (N'NBCU', 'Standard', 0),
-    (N'Fox', 'Standard', 0),
-    (N'Coral Technology', 'Standard', 1);
+INSERT INTO dbo.client (name, is_internal) VALUES
+    (N'Paramount', 0),
+    (N'AMC', 0),
+    (N'Netflix', 0),
+    (N'NBCU', 0),
+    (N'Fox', 0),
+    (N'Ole', 0),
+    (N'NEON', 0),
+    (N'Coral Technology', 1);
 
 INSERT INTO dbo.product (name) VALUES (N'Coral MSP');
 
@@ -63,18 +65,86 @@ SELECT v.code, v.name, v.email, t.team_id FROM (VALUES
     (N'RB', N'Rosa Bianchi', N'rosa.bianchi@coraltechnology.example', N'Product')
 ) v(code, name, email, team) JOIN dbo.team t ON t.name = v.team;
 
--- Default SLA by priority (support tier Standard), then client overrides. Minutes.
-INSERT INTO dbo.sla_policy (client_id, support_tier, priority, first_response_mins, resolution_mins) VALUES
-    (NULL, 'Standard', 1, 60, 240),
-    (NULL, 'Standard', 2, 240, 4320),
-    (NULL, 'Standard', 3, 480, 7200),
-    (NULL, 'Standard', 4, 480, 7200);
-INSERT INTO dbo.sla_policy (client_id, support_tier, priority, first_response_mins, resolution_mins)
-SELECT c.client_id, NULL, v.p, v.fr, v.res FROM (VALUES
-    (N'Paramount', 1, 60, 180),
-    (N'Fox', 1, 60, 240),
-    (N'Fox', 2, 240, 2880)
-) v(client, p, fr, res) JOIN dbo.client c ON c.name = v.client;
+-- Business calendar and holidays for SLA clocks in business hours or days
+INSERT INTO dbo.business_calendar (name, time_zone, day_start, day_end, open_weekdays) VALUES (N'Coral business hours (ET)', N'Eastern Standard Time', '08:00', '18:00', '12345');
+DECLARE @cal INT = SCOPE_IDENTITY();
+INSERT INTO dbo.business_holiday (calendar_id, holiday_date, name) VALUES
+    (@cal, '2026-01-01', N'New Year''s Day'),
+    (@cal, '2026-01-19', N'Martin Luther King Jr. Day'),
+    (@cal, '2026-02-16', N'Washington''s Birthday'),
+    (@cal, '2026-05-25', N'Memorial Day'),
+    (@cal, '2026-06-19', N'Juneteenth'),
+    (@cal, '2026-07-03', N'Independence Day (observed)'),
+    (@cal, '2026-09-07', N'Labor Day'),
+    (@cal, '2026-10-12', N'Columbus Day'),
+    (@cal, '2026-11-11', N'Veterans Day'),
+    (@cal, '2026-11-26', N'Thanksgiving'),
+    (@cal, '2026-11-27', N'Day after Thanksgiving'),
+    (@cal, '2026-12-25', N'Christmas Day'),
+    (@cal, '2027-01-01', N'New Year''s Day'),
+    (@cal, '2027-01-18', N'Martin Luther King Jr. Day'),
+    (@cal, '2027-02-15', N'Washington''s Birthday'),
+    (@cal, '2027-05-31', N'Memorial Day'),
+    (@cal, '2027-06-18', N'Juneteenth (observed)'),
+    (@cal, '2027-07-05', N'Independence Day (observed)'),
+    (@cal, '2027-09-06', N'Labor Day'),
+    (@cal, '2027-10-11', N'Columbus Day'),
+    (@cal, '2027-11-11', N'Veterans Day'),
+    (@cal, '2027-11-25', N'Thanksgiving'),
+    (@cal, '2027-11-26', N'Day after Thanksgiving'),
+    (@cal, '2027-12-24', N'Christmas Day (observed)');
+
+-- Client SLA terms (from the SLA matrix). client NULL = the Coral standard for everyone else.
+INSERT INTO dbo.client_sla (client_id, calendar_id, customer_name, deployment, terms_basis, verification, monthly_uptime, support_hours, after_hours,
+                            rto, rpo, hourly_backups, daily_backups, restore_target, service_credits, special_terms, source_documents)
+SELECT c.client_id, @cal, v.label, v.deployment, v.basis, v.verification, v.uptime, v.hours, v.after_hours,
+       v.rto, v.rpo, v.hourly, v.daily, v.restore_target, v.credits, v.special, v.source
+FROM (VALUES
+    (NULL, N'Coral standard', NULL, N'Coral standard operational SLA', N'standard', NULL, N'8am–6pm ET, Mon–Fri; holidays excluded', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    (N'NBCU', N'NBCUniversal', N'coral_hosted', N'Amended MSA Annex A (production)', N'contract', N'99.8%', N'24/7 for Sev 1–2; normal business hours for Sev 3–4', N'24/7 for Sev 1–2', N'Not specified', N'Not specified', N'Not specified', N'Not specified', N'Not specified', N'10% / 25% / 50% by uptime band; annual cap', N'Production SLA differs from UAT and hypercare (UAT: Sev 1 4 business hours, Sev 2 1 business day, Sev 3 2 business days, Sev 4 agreed schedule). Persistent failure allows termination. The credit bands overlap in the source; legal review advised.', N'NBCU Master Agreement Amendment_1.pdf; NBCU MSA'),
+    (N'AMC', N'AMC Networks', N'coral_hosted', N'Executed MSA Exhibit A', N'contract', N'99.5%', N'8am–6pm ET, Mon–Fri; holidays excluded', N'Month-end extended support; other extensions subject to terms', N'8 hours', N'1 hour', N'3 months', N'1 year', N'8 hours', N'10% of one quarter of the annual subscription fee, per quarterly terms', N'Availability measured monthly, credits assessed quarterly. Security incident notice within 24 hours.', N'Coral_MSA_Final_8-24-23 For Execution.pdf'),
+    (N'Ole', N'Ole', N'coral_hosted', N'MSA Exhibit A', N'unconfirmed', N'99%', N'8am–6pm ET, Mon–Fri; holidays excluded', N'By written request and mutual agreement', N'8 hours', N'1 hour', N'Retention to verify', N'1 year', N'8 hours', N'Not identified', N'Contract terms identified but execution unconfirmed: confirm the signed final copy. Fix clock starts once Coral reproduces the error.', N'Ole Coral Master Hosted Software Agreement (JS 7-15-25).docx'),
+    (N'NEON', N'NEON', N'coral_hosted', N'Executed MSA Exhibit C (2026-03-09)', N'contract', N'99%', N'8am–6pm ET, Mon–Fri; holidays excluded', N'By written request and mutual agreement', N'8 hours', N'1 hour', N'3 months', N'1 year', N'8 hours', N'Not specified', N'Severity mutually agreed. 2 months of hypercare. Immediate written notice of an actual or suspected breach (MSA §5.5).', N'NEON License Agreement and SOW Coral Technology 03-09-2026.pdf pp.14–16'),
+    (N'Fox', N'Fox', N'customer_hosted', N'Assumed Coral standard operational SLA', N'assumed', N'N/A', N'8am–6pm ET, Mon–Fri; holidays excluded', N'By written agreement (assumed)', N'N/A', N'N/A', N'Customer responsibility / unverified', N'Customer responsibility / unverified', N'N/A', N'None verified', N'Historical published support policy unavailable: the numbers are an operational assumption, not contract text. Prompt written notice and mitigation of security flaws or breaches (MSA Exhibit 1).', N'Foxcorp Holdings-Coral Technology Master License and Services Agreement (Fully Executed).pdf §3.5; Fox executed Order'),
+    (N'Paramount', N'Paramount / CBS', N'customer_hosted', N'Assumed Coral standard operational SLA', N'assumed', N'N/A', N'8am–6pm ET, Mon–Fri; holidays excluded', N'By written agreement (assumed)', N'N/A', N'N/A', N'Customer responsibility / unverified', N'Customer responsibility / unverified', N'N/A', N'None verified', N'A separate amended work order gives low, medium and high bugs 3, 6 and 10 days of development effort. That is effort, not an elapsed-time incident SLA.', N'Coral Tech - Paramount Global Amended Work Order AMS - 3-9-2022 CLEAN.pdf; CBS MSA and work order')
+) v(client, label, deployment, basis, verification, uptime, hours, after_hours, rto, rpo, hourly, daily, restore_target, credits, special, source)
+LEFT JOIN dbo.client c ON c.name = v.client;
+
+-- Response and fix targets per severity (Sev 1-4 = priority 1-4)
+INSERT INTO dbo.sla_policy (client_sla_id, priority, response_value, response_unit, response_note, fix_value, fix_unit, fix_note)
+SELECT cs.client_sla_id, v.p, v.rv, v.ru, v.rn, v.fv, v.fu, v.fn
+FROM (VALUES
+    (NULL, 1, 2, N'bh', NULL, 24, N'h', N'Commercially reasonable efforts'),
+    (NULL, 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (NULL, 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (NULL, 4, 2, N'bd', NULL, NULL, N'next', NULL),
+    (N'NBCU', 1, 1, N'h', NULL, NULL, N'best', N'Continuous work, no fixed deadline'),
+    (N'NBCU', 2, 4, N'h', NULL, NULL, N'best', N'Continuous work, no fixed deadline'),
+    (N'NBCU', 3, 6, N'bh', NULL, NULL, N'prompt', N'During normal business hours'),
+    (N'NBCU', 4, 8, N'bh', N'Business-hours condition', 2, N'bd', N'Promptly; investigate or design within 2 business days'),
+    (N'AMC', 1, 2, N'bh', NULL, 24, N'h', N'Commercially reasonable efforts'),
+    (N'AMC', 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (N'AMC', 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (N'AMC', 4, 2, N'bd', NULL, NULL, N'next', NULL),
+    (N'Ole', 1, 2, N'bh', NULL, 24, N'h', N'Commercially reasonable efforts'),
+    (N'Ole', 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (N'Ole', 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (N'Ole', 4, 2, N'bd', NULL, NULL, N'next', NULL),
+    (N'NEON', 1, 2, N'bh', NULL, 24, N'h', N'Commercially reasonable efforts'),
+    (N'NEON', 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (N'NEON', 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (N'NEON', 4, 2, N'bd', NULL, NULL, N'next', NULL),
+    (N'Fox', 1, 2, N'bh', NULL, 24, N'h', N'Target'),
+    (N'Fox', 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (N'Fox', 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (N'Fox', 4, 2, N'bd', NULL, NULL, N'next', NULL),
+    (N'Paramount', 1, 2, N'bh', NULL, 24, N'h', N'Target'),
+    (N'Paramount', 2, 4, N'bh', NULL, 2, N'bd', NULL),
+    (N'Paramount', 3, 8, N'bh', NULL, 10, N'bd', NULL),
+    (N'Paramount', 4, 2, N'bd', NULL, NULL, N'next', NULL)
+) v(client, p, rv, ru, rn, fv, fu, fn)
+LEFT JOIN dbo.client c ON c.name = v.client
+JOIN dbo.client_sla cs ON (cs.client_id = c.client_id) OR (v.client IS NULL AND cs.client_id IS NULL);
 
 -- Tasks. age = minutes since created; offsets are minutes after creation.
 INSERT INTO dbo.task (task_key, title, task_type, source_system, priority, stage, client_id, product_id, project_id,
@@ -130,7 +200,9 @@ FROM (VALUES
     (N'SUP-2335', N'Royalty statement totals round differently from invoices', N'bug', N'email', 4, N'queued', N'Paramount', NULL, NULL, N'Support L2', N'Finance', N'Backlog', 15000, 120, NULL, NULL, NULL, NULL),
     (N'FR-126', N'Multi-currency invoices for international clients', N'feature', N'email', 3, N'triage', N'Coral Technology', N'Product backlog', NULL, N'Product', N'Finance', N'Backlog', 20000, NULL, NULL, NULL, NULL, NULL),
     (N'FR-127', N'TVOD price tiers by territory', N'feature', N'teams', 4, N'queued', N'NBCU', N'Product backlog', N'RB', N'Product', N'TVOD', N'Backlog', 12000, NULL, NULL, NULL, NULL, NULL),
-    (N'INT-563', N'Document the TVOD settlement process', N'internal', N'board', 4, N'triage', N'Coral Technology', NULL, NULL, N'Product', N'TVOD', N'Backlog', 8000, NULL, NULL, NULL, NULL, NULL)
+    (N'INT-563', N'Document the TVOD settlement process', N'internal', N'board', 4, N'triage', N'Coral Technology', NULL, NULL, N'Product', N'TVOD', N'Backlog', 8000, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2390', N'Rights import job stalls on large catalogs', N'incident', N'portal', 2, N'triage', N'Ole', NULL, NULL, N'Support L2', N'International', NULL, 90, NULL, NULL, NULL, NULL, NULL),
+    (N'SUP-2391', N'How do we add a new territory to the price list?', N'question', N'email', 3, N'queued', N'NEON', NULL, N'HS', N'Support L1', N'TVOD', NULL, 300, 45, NULL, NULL, NULL, NULL)
 ) v(task_key, title, task_type, source_system, priority, stage, client, project, owner_code, queue, module, rel, age, fr, paused, due_days, external_ref, notes)
 JOIN dbo.client c ON c.name = v.client
 LEFT JOIN dbo.project pj ON pj.name = v.project
@@ -184,7 +256,9 @@ SELECT t.task_id, v.tag FROM (VALUES
     (N'SUP-2335', N'Royalties'),
     (N'FR-126', N'Requested by 2 clients'),
     (N'FR-127', N'Pricing'),
-    (N'INT-563', N'Docs')
+    (N'INT-563', N'Docs'),
+    (N'SUP-2390', N'Imports'),
+    (N'SUP-2391', N'Pricing')
 ) v(task_key, tag) JOIN dbo.task t ON t.task_key = v.task_key;
 
 INSERT INTO dbo.task_activity (task_id, occurred_at, message)
@@ -310,5 +384,10 @@ SELECT t.task_id, DATEADD(SECOND, v.secs_ago * -1, @now), v.msg FROM (VALUES
     (N'FR-126', 10800, N'Asked for by Fox and NBCU'),
     (N'FR-127', 720000, N'Created from Teams'),
     (N'FR-127', 718200, N'Assigned to Rosa Bianchi'),
-    (N'INT-563', 480000, N'Created from the board')
+    (N'INT-563', 480000, N'Created from the board'),
+    (N'SUP-2390', 5400, N'Created from support portal'),
+    (N'SUP-2391', 18000, N'Created from email'),
+    (N'SUP-2391', 16200, N'Assigned to Hana Sato'),
+    (N'SUP-2391', 15300, N'First response sent'),
+    (N'SUP-2391', 3600, N'Sent the how-to, waiting to confirm')
 ) v(task_key, secs_ago, msg) JOIN dbo.task t ON t.task_key = v.task_key;

@@ -9,7 +9,7 @@ NOW = datetime.now(timezone.utc).replace(microsecond=0)
 
 def iso(dt): return dt.strftime('%Y-%m-%dT%H:%M:%SZ') if dt else None
 
-CLIENTS = ['Paramount', 'AMC', 'Netflix', 'NBCU', 'Fox', 'Coral Technology']
+CLIENTS = ['Paramount', 'AMC', 'Netflix', 'NBCU', 'Fox', 'Ole', 'NEON', 'Coral Technology']
 PROJECTS = ['Coral MSP 4.12 release', 'Netflix onboarding', 'Fox SSO migration', 'Paramount reporting rollout', 'Product backlog']
 TEAMS = ['Support L1', 'Support L2', 'Development', 'Platform', 'QA', 'Product']
 PEOPLE = [  # id, name, team, color
@@ -19,11 +19,79 @@ PEOPLE = [  # id, name, team, color
     ('OH', 'Omar Haddad', 'Development', '#d2b67c'), ('PN', 'Priya Nair', 'Platform', '#b69cff'),
     ('LP', 'Lena Park', 'QA', '#f3d27a'), ('RB', 'Rosa Bianchi', 'Product', '#c7c2ff'),
 ]
-# Minutes, wall clock, for the prototype. fr = first response, res = resolution.
 MODULES = ['Operations', 'Finance', 'TVOD', 'International', 'Reporting', 'Platform']
 RELEASES = [{'name': '4.12', 'date': '2026-11-07'}, {'name': '4.13', 'date': '2026-12-04'}, {'name': '5.0', 'date': '2027-01-29'}]
-SLA_DEFAULT = {'1': {'fr': 60, 'res': 240}, '2': {'fr': 240, 'res': 4320}, '3': {'fr': 480, 'res': 7200}, '4': {'fr': 480, 'res': 7200}}
-SLA_OVERRIDES = {'Paramount': {'1': {'fr': 60, 'res': 180}}, 'Fox': {'1': {'fr': 60, 'res': 240}, '2': {'fr': 240, 'res': 2880}}}
+
+# ---------- SLA terms, from Coral_MSP_Complete_SLA_Matrix.xlsx (2026-10-28) ----------
+# Business calendar: 8am-6pm ET, Mon-Fri, US federal holidays and the day after Thanksgiving off.
+CALENDAR = {'name': 'Coral business hours (ET)', 'tz': 'America/New_York', 'tzWindows': 'Eastern Standard Time', 'tzLabel': 'ET',
+            'start': 8, 'end': 18, 'days': [1, 2, 3, 4, 5]}
+HOLIDAYS = [
+    ('2026-01-01', "New Year's Day"), ('2026-01-19', 'Martin Luther King Jr. Day'), ('2026-02-16', "Washington's Birthday"),
+    ('2026-05-25', 'Memorial Day'), ('2026-06-19', 'Juneteenth'), ('2026-07-03', 'Independence Day (observed)'),
+    ('2026-09-07', 'Labor Day'), ('2026-10-12', 'Columbus Day'), ('2026-11-11', 'Veterans Day'),
+    ('2026-11-26', 'Thanksgiving'), ('2026-11-27', 'Day after Thanksgiving'), ('2026-12-25', 'Christmas Day'),
+    ('2027-01-01', "New Year's Day"), ('2027-01-18', 'Martin Luther King Jr. Day'), ('2027-02-15', "Washington's Birthday"),
+    ('2027-05-31', 'Memorial Day'), ('2027-06-18', 'Juneteenth (observed)'), ('2027-07-05', 'Independence Day (observed)'),
+    ('2027-09-06', 'Labor Day'), ('2027-10-11', 'Columbus Day'), ('2027-11-11', 'Veterans Day'),
+    ('2027-11-25', 'Thanksgiving'), ('2027-11-26', 'Day after Thanksgiving'), ('2027-12-24', 'Christmas Day (observed)'),
+]
+# Units: bh business hours, bd business days, h hours 24/7, d calendar days; fix only: best, prompt, next (no clock)
+def t(n, u, note=None):
+    d = {'u': u} if n is None else {'n': n, 'u': u}
+    if note: d['note'] = note
+    return d
+STD_SEV = {
+    '1': {'resp': t(2, 'bh'), 'fix': t(24, 'h', 'Commercially reasonable efforts')},
+    '2': {'resp': t(4, 'bh'), 'fix': t(2, 'bd')},
+    '3': {'resp': t(8, 'bh'), 'fix': t(10, 'bd')},
+    '4': {'resp': t(2, 'bd'), 'fix': t(None, 'next')},
+}
+STD_HOURS = '8am–6pm ET, Mon–Fri; holidays excluded'
+def assumed_sev():
+    sev = json.loads(json.dumps(STD_SEV)); sev['1']['fix']['note'] = 'Target'; return sev
+SLA_TERMS = {  # doc id -> terms
+    '_standard': {'client': '*', 'label': 'Coral standard', 'verification': 'standard', 'basis': 'Coral standard operational SLA',
+                  'hours': STD_HOURS, 'sev': STD_SEV},
+    'nbcu': {'client': 'NBCU', 'label': 'NBCUniversal', 'deployment': 'Coral-hosted', 'basis': 'Amended MSA Annex A (production)',
+             'verification': 'contract', 'uptime': '99.8%', 'hours': '24/7 for Sev 1–2; normal business hours for Sev 3–4', 'afterHours': '24/7 for Sev 1–2',
+             'rto': 'Not specified', 'rpo': 'Not specified', 'hourlyBackups': 'Not specified', 'dailyBackups': 'Not specified', 'restore': 'Not specified',
+             'credits': '10% / 25% / 50% by uptime band; annual cap',
+             'special': 'Production SLA differs from UAT and hypercare (UAT: Sev 1 4 business hours, Sev 2 1 business day, Sev 3 2 business days, Sev 4 agreed schedule). Persistent failure allows termination. The credit bands overlap in the source; legal review advised.',
+             'source': 'NBCU Master Agreement Amendment_1.pdf; NBCU MSA',
+             'sev': {'1': {'resp': t(1, 'h'), 'fix': t(None, 'best', 'Continuous work, no fixed deadline')},
+                     '2': {'resp': t(4, 'h'), 'fix': t(None, 'best', 'Continuous work, no fixed deadline')},
+                     '3': {'resp': t(6, 'bh'), 'fix': t(None, 'prompt', 'During normal business hours')},
+                     '4': {'resp': t(8, 'bh', 'Business-hours condition'), 'fix': t(2, 'bd', 'Promptly; investigate or design within 2 business days')}}},
+    'amc': {'client': 'AMC', 'label': 'AMC Networks', 'deployment': 'Coral-hosted', 'basis': 'Executed MSA Exhibit A', 'verification': 'contract',
+            'uptime': '99.5%', 'hours': STD_HOURS, 'afterHours': 'Month-end extended support; other extensions subject to terms',
+            'rto': '8 hours', 'rpo': '1 hour', 'hourlyBackups': '3 months', 'dailyBackups': '1 year', 'restore': '8 hours',
+            'credits': '10% of one quarter of the annual subscription fee, per quarterly terms',
+            'special': 'Availability measured monthly, credits assessed quarterly. Security incident notice within 24 hours.',
+            'source': 'Coral_MSA_Final_8-24-23 For Execution.pdf', 'sev': STD_SEV},
+    'ole': {'client': 'Ole', 'label': 'Ole', 'deployment': 'Coral-hosted', 'basis': 'MSA Exhibit A', 'verification': 'unconfirmed',
+            'uptime': '99%', 'hours': STD_HOURS, 'afterHours': 'By written request and mutual agreement',
+            'rto': '8 hours', 'rpo': '1 hour', 'hourlyBackups': 'Retention to verify', 'dailyBackups': '1 year', 'restore': '8 hours',
+            'credits': 'Not identified', 'special': 'Contract terms identified but execution unconfirmed: confirm the signed final copy. Fix clock starts once Coral reproduces the error.',
+            'source': 'Ole Coral Master Hosted Software Agreement (JS 7-15-25).docx', 'sev': STD_SEV},
+    'neon': {'client': 'NEON', 'label': 'NEON', 'deployment': 'Coral-hosted', 'basis': 'Executed MSA Exhibit C (2026-03-09)', 'verification': 'contract',
+             'uptime': '99%', 'hours': STD_HOURS, 'afterHours': 'By written request and mutual agreement',
+             'rto': '8 hours', 'rpo': '1 hour', 'hourlyBackups': '3 months', 'dailyBackups': '1 year', 'restore': '8 hours',
+             'credits': 'Not specified', 'special': 'Severity mutually agreed. 2 months of hypercare. Immediate written notice of an actual or suspected breach (MSA §5.5).',
+             'source': 'NEON License Agreement and SOW Coral Technology 03-09-2026.pdf pp.14–16', 'sev': STD_SEV},
+    'fox': {'client': 'Fox', 'label': 'Fox', 'deployment': 'Customer-hosted', 'basis': 'Assumed Coral standard operational SLA', 'verification': 'assumed',
+            'uptime': 'N/A', 'hours': STD_HOURS, 'afterHours': 'By written agreement (assumed)',
+            'rto': 'N/A', 'rpo': 'N/A', 'hourlyBackups': 'Customer responsibility / unverified', 'dailyBackups': 'Customer responsibility / unverified', 'restore': 'N/A',
+            'credits': 'None verified',
+            'special': 'Historical published support policy unavailable: the numbers are an operational assumption, not contract text. Prompt written notice and mitigation of security flaws or breaches (MSA Exhibit 1).',
+            'source': 'Foxcorp Holdings-Coral Technology Master License and Services Agreement (Fully Executed).pdf §3.5; Fox executed Order', 'sev': assumed_sev()},
+    'paramount': {'client': 'Paramount', 'label': 'Paramount / CBS', 'deployment': 'Customer-hosted', 'basis': 'Assumed Coral standard operational SLA', 'verification': 'assumed',
+                  'uptime': 'N/A', 'hours': STD_HOURS, 'afterHours': 'By written agreement (assumed)',
+                  'rto': 'N/A', 'rpo': 'N/A', 'hourlyBackups': 'Customer responsibility / unverified', 'dailyBackups': 'Customer responsibility / unverified', 'restore': 'N/A',
+                  'credits': 'None verified',
+                  'special': 'A separate amended work order gives low, medium and high bugs 3, 6 and 10 days of development effort. That is effort, not an elapsed-time incident SLA.',
+                  'source': 'Coral Tech - Paramount Global Amended Work Order AMS - 3-9-2022 CLEAN.pdf; CBS MSA and work order', 'sev': assumed_sev()},
+}
 
 # key, type, source, title, client, project, prio, owner, queue, stage, age_mins, fr_after, paused_after, due_days, link, tags, last, notes
 T = [
@@ -72,6 +140,8 @@ T += [
  ('FR-126','feature','email','Multi-currency invoices for international clients','Coral Technology','Product backlog',3,None,'Product',0,20000,None,None,None,None,['Requested by 2 clients'],'Asked for by Fox and NBCU',None),
  ('FR-127','feature','teams','TVOD price tiers by territory','NBCU','Product backlog',4,'RB','Product',1,12000,None,None,None,None,['Pricing'],None,None),
  ('INT-563','internal','board','Document the TVOD settlement process','Coral Technology',None,4,None,'Product',0,8000,None,None,None,None,['Docs'],None,None),
+ ('SUP-2390','incident','portal','Rights import job stalls on large catalogs','Ole',None,2,None,'Support L2',0,90,None,None,None,None,['Imports'],None,None),
+ ('SUP-2391','question','email','How do we add a new territory to the price list?','NEON',None,3,'HS','Support L1',1,300,45,None,None,None,['Pricing'],'Sent the how-to, waiting to confirm',None),
 ]
 # key -> (product module, release: None | 'Backlog' | release name)
 MODREL = {
@@ -86,6 +156,7 @@ MODREL = {
  'SUP-2340':('Platform',None),'REQ-300':('Operations',None),'SUP-2345':('Operations',None),'CR-044':('Platform',None),
  'SUP-2388':('TVOD',None),'SUP-2389':('Finance',None),'SUP-2331':('International','4.13'),'SUP-2335':('Finance','Backlog'),
  'FR-126':('Finance','Backlog'),'FR-127':('TVOD','Backlog'),'INT-563':('TVOD','Backlog'),
+ 'SUP-2390':('International',None),'SUP-2391':('TVOD',None),
 }
 assert set(MODREL) == {x[0] for x in T}, set(MODREL) ^ {x[0] for x in T}
 
@@ -141,8 +212,11 @@ def put(coll, doc_id, data):
     writes.append({'op': 'set', 'collection': coll, 'doc_id': doc_id, 'file_path': p})
 
 put('config', 'settings', {'clients': CLIENTS, 'projects': PROJECTS, 'teams': TEAMS, 'modules': MODULES, 'releases': RELEASES,
-                           'sla': {'default': SLA_DEFAULT, 'overrides': SLA_OVERRIDES},
+                           'calendar': {'tz': CALENDAR['tz'], 'tzLabel': CALENDAR['tzLabel'], 'start': CALENDAR['start'], 'end': CALENDAR['end'],
+                                        'days': CALENDAR['days'], 'holidays': [d for d, _ in HOLIDAYS]},
                            'seededAt': iso(NOW), 'stageModel': 2})
+for sid, terms in SLA_TERMS.items():
+    put('sla', sid, terms)
 for pid, name, team, color in PEOPLE:
     put('people', pid, {'name': name, 'team': team, 'color': color})
 for d in docs:
@@ -154,8 +228,8 @@ def q(s): return 'NULL' if s is None else "N'" + str(s).replace("'", "''") + "'"
 L = ['-- Coral MSP action board: test data (SQL Server)',
      '-- Generated from the same source as the prototype. Times are relative to when you run it.',
      'SET NOCOUNT ON;', 'DECLARE @now DATETIME2(0) = SYSUTCDATETIME();', '']
-L.append('INSERT INTO dbo.client (name, support_tier, is_internal) VALUES')
-L.append(',\n'.join(f"    ({q(c)}, 'Standard', {1 if c == 'Coral Technology' else 0})" for c in CLIENTS) + ';')
+L.append('INSERT INTO dbo.client (name, is_internal) VALUES')
+L.append(',\n'.join(f"    ({q(c)}, {1 if c == 'Coral Technology' else 0})" for c in CLIENTS) + ';')
 L.append('\nINSERT INTO dbo.product (name) VALUES (N\'Coral MSP\');')
 L.append('\nINSERT INTO dbo.product_module (product_id, name)')
 L.append("SELECT (SELECT product_id FROM dbo.product WHERE name = N'Coral MSP'), v.name FROM (VALUES")
@@ -175,14 +249,35 @@ L.append('\nINSERT INTO dbo.person (person_code, display_name, email, team_id)')
 L.append('SELECT v.code, v.name, v.email, t.team_id FROM (VALUES')
 L.append(',\n'.join(f"    ({q(p)}, {q(n)}, {q(n.lower().replace(' ', '.') + '@coraltechnology.example')}, {q(tm)})" for p, n, tm, _ in PEOPLE))
 L.append(') v(code, name, email, team) JOIN dbo.team t ON t.name = v.team;')
-L.append('\n-- Default SLA by priority (support tier Standard), then client overrides. Minutes.')
-L.append('INSERT INTO dbo.sla_policy (client_id, support_tier, priority, first_response_mins, resolution_mins) VALUES')
-rows = [f"    (NULL, 'Standard', {p}, {v['fr']}, {v['res']})" for p, v in SLA_DEFAULT.items()]
-L.append(',\n'.join(rows) + ';')
-L.append('INSERT INTO dbo.sla_policy (client_id, support_tier, priority, first_response_mins, resolution_mins)')
-L.append('SELECT c.client_id, NULL, v.p, v.fr, v.res FROM (VALUES')
-L.append(',\n'.join(f'    ({q(c)}, {p}, {v["fr"]}, {v["res"]})' for c, m in SLA_OVERRIDES.items() for p, v in m.items()))
-L.append(') v(client, p, fr, res) JOIN dbo.client c ON c.name = v.client;')
+L.append('\n-- Business calendar and holidays for SLA clocks in business hours or days')
+L.append(f"INSERT INTO dbo.business_calendar (name, time_zone, day_start, day_end, open_weekdays) VALUES ({q(CALENDAR['name'])}, {q(CALENDAR['tzWindows'])}, "
+         f"'{CALENDAR['start']:02d}:00', '{CALENDAR['end']:02d}:00', '{''.join(str(d) for d in CALENDAR['days'])}');")
+L.append('DECLARE @cal INT = SCOPE_IDENTITY();')
+L.append('INSERT INTO dbo.business_holiday (calendar_id, holiday_date, name) VALUES')
+L.append(',\n'.join(f"    (@cal, '{d}', {q(n)})" for d, n in HOLIDAYS) + ';')
+L.append('\n-- Client SLA terms (from the SLA matrix). client NULL = the Coral standard for everyone else.')
+L.append('INSERT INTO dbo.client_sla (client_id, calendar_id, customer_name, deployment, terms_basis, verification, monthly_uptime, support_hours, after_hours,')
+L.append('                            rto, rpo, hourly_backups, daily_backups, restore_target, service_credits, special_terms, source_documents)')
+L.append('SELECT c.client_id, @cal, v.label, v.deployment, v.basis, v.verification, v.uptime, v.hours, v.after_hours,')
+L.append('       v.rto, v.rpo, v.hourly, v.daily, v.restore_target, v.credits, v.special, v.source')
+L.append('FROM (VALUES')
+DEPLOY = {'Coral-hosted': 'coral_hosted', 'Customer-hosted': 'customer_hosted'}
+L.append(',\n'.join('    (' + ', '.join(q(x) for x in (None if v['client'] == '*' else v['client'], v.get('label'), DEPLOY.get(v.get('deployment')), v.get('basis'), v['verification'],
+    v.get('uptime'), v.get('hours'), v.get('afterHours'), v.get('rto'), v.get('rpo'), v.get('hourlyBackups'), v.get('dailyBackups'), v.get('restore'),
+    v.get('credits'), v.get('special'), v.get('source'))) + ')' for v in SLA_TERMS.values()))
+L.append(') v(client, label, deployment, basis, verification, uptime, hours, after_hours, rto, rpo, hourly, daily, restore_target, credits, special, source)')
+L.append('LEFT JOIN dbo.client c ON c.name = v.client;')
+L.append('\n-- Response and fix targets per severity (Sev 1-4 = priority 1-4)')
+L.append('INSERT INTO dbo.sla_policy (client_sla_id, priority, response_value, response_unit, response_note, fix_value, fix_unit, fix_note)')
+L.append('SELECT cs.client_sla_id, v.p, v.rv, v.ru, v.rn, v.fv, v.fu, v.fn')
+L.append('FROM (VALUES')
+num = lambda x: 'NULL' if x is None else str(x)
+L.append(',\n'.join(f"    ({q(None if v['client'] == '*' else v['client'])}, {p}, {num(sv['resp'].get('n'))}, {q(sv['resp']['u'])}, {q(sv['resp'].get('note'))}, "
+                    f"{num(sv['fix'].get('n'))}, {q(sv['fix']['u'])}, {q(sv['fix'].get('note'))})"
+                    for v in SLA_TERMS.values() for p, sv in v['sev'].items()))
+L.append(') v(client, p, rv, ru, rn, fv, fu, fn)')
+L.append('LEFT JOIN dbo.client c ON c.name = v.client')
+L.append('JOIN dbo.client_sla cs ON (cs.client_id = c.client_id) OR (v.client IS NULL AND cs.client_id IS NULL);')
 
 L.append('\n-- Tasks. age = minutes since created; offsets are minutes after creation.')
 L.append('INSERT INTO dbo.task (task_key, title, task_type, source_system, priority, stage, client_id, product_id, project_id,')

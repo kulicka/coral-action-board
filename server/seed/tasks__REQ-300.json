@@ -9,11 +9,11 @@
  "owner": "SO",
  "queue": "Support L2",
  "stage": 6,
- "createdAt": "2026-10-23T17:21:42Z",
- "firstResponseAt": "2026-10-23T19:21:42Z",
+ "createdAt": "2026-10-23T18:23:32Z",
+ "firstResponseAt": "2026-10-23T20:23:32Z",
  "pausedSince": null,
  "pausedMins": 0,
- "resolvedAt": "2026-10-26T15:21:42Z",
+ "resolvedAt": "2026-10-26T16:23:32Z",
  "due": null,
  "module": "Operations",
  "release": null,
@@ -24,25 +24,25 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-23T17:21:42Z",
+   "at": "2026-10-23T18:23:32Z",
    "text": "Created from support portal"
   },
   {
-   "at": "2026-10-23T17:51:42Z",
+   "at": "2026-10-23T18:53:32Z",
    "text": "Assigned to Sam Okafor"
   },
   {
-   "at": "2026-10-23T19:21:42Z",
+   "at": "2026-10-23T20:23:32Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-26T15:21:42Z",
+   "at": "2026-10-26T16:23:32Z",
    "text": "Moved to Done"
   },
   {
-   "at": "2026-10-28T11:01:42Z",
+   "at": "2026-10-28T12:03:32Z",
    "text": "Tenant handed over"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

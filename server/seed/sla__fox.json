@@ -1,0 +1,60 @@
+{
+ "client": "Fox",
+ "label": "Fox",
+ "deployment": "Customer-hosted",
+ "basis": "Assumed Coral standard operational SLA",
+ "verification": "assumed",
+ "uptime": "N/A",
+ "hours": "8am\u20136pm ET, Mon\u2013Fri; holidays excluded",
+ "afterHours": "By written agreement (assumed)",
+ "rto": "N/A",
+ "rpo": "N/A",
+ "hourlyBackups": "Customer responsibility / unverified",
+ "dailyBackups": "Customer responsibility / unverified",
+ "restore": "N/A",
+ "credits": "None verified",
+ "special": "Historical published support policy unavailable: the numbers are an operational assumption, not contract text. Prompt written notice and mitigation of security flaws or breaches (MSA Exhibit 1).",
+ "source": "Foxcorp Holdings-Coral Technology Master License and Services Agreement (Fully Executed).pdf \u00a73.5; Fox executed Order",
+ "sev": {
+  "1": {
+   "resp": {
+    "n": 2,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 24,
+    "u": "h",
+    "note": "Target"
+   }
+  },
+  "2": {
+   "resp": {
+    "n": 4,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 2,
+    "u": "bd"
+   }
+  },
+  "3": {
+   "resp": {
+    "n": 8,
+    "u": "bh"
+   },
+   "fix": {
+    "n": 10,
+    "u": "bd"
+   }
+  },
+  "4": {
+   "resp": {
+    "n": 2,
+    "u": "bd"
+   },
+   "fix": {
+    "u": "next"
+   }
+  }
+ }
+}

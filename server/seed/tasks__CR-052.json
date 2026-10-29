@@ -9,7 +9,7 @@
  "owner": "JR",
  "queue": "Support L1",
  "stage": 1,
- "createdAt": "2026-10-27T04:41:42Z",
+ "createdAt": "2026-10-27T05:43:32Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,13 +24,13 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-27T04:41:42Z",
+   "at": "2026-10-27T05:43:32Z",
    "text": "Created from the board"
   },
   {
-   "at": "2026-10-27T05:11:42Z",
+   "at": "2026-10-27T06:13:32Z",
    "text": "Assigned to Jon Ruiz"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

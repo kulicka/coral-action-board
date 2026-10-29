@@ -1,7 +1,8 @@
 -- Coral MSP action board: schema (SQL Server 2019+ / Azure SQL)
 -- Run order: 01_schema.sql, 02_test_data.sql, 03_views_and_procs.sql
 -- Mirrors the prototype's data model. One client per task (multi-client work goes
--- under 'Coral Technology'), exactly one accountable owner, client-specific SLA overrides.
+-- under 'Coral Technology'), exactly one accountable owner, SLA terms per client with a
+-- Coral standard for everyone else, and a business-hours calendar for the SLA clocks.
 
 IF SCHEMA_ID('dbo') IS NULL EXEC('CREATE SCHEMA dbo');
 GO
@@ -9,7 +10,6 @@ GO
 CREATE TABLE dbo.client (
     client_id     INT IDENTITY(1,1) CONSTRAINT pk_client PRIMARY KEY,
     name          NVARCHAR(200) NOT NULL CONSTRAINT uq_client_name UNIQUE,
-    support_tier  VARCHAR(20)   NOT NULL CONSTRAINT df_client_tier DEFAULT ('Standard'),
     is_internal   BIT           NOT NULL CONSTRAINT df_client_internal DEFAULT (0)  -- 1 = Coral Technology
 );
 
@@ -54,18 +54,65 @@ CREATE TABLE dbo.person (
     is_active     BIT NOT NULL CONSTRAINT df_person_active DEFAULT (1)
 );
 
--- Default SLA per tier and priority; a row with client_id set overrides it for that client.
-CREATE TABLE dbo.sla_policy (
-    sla_policy_id        INT IDENTITY(1,1) CONSTRAINT pk_sla_policy PRIMARY KEY,
-    client_id            INT NULL CONSTRAINT fk_sla_client REFERENCES dbo.client(client_id),
-    support_tier         VARCHAR(20) NULL,
-    priority             TINYINT NOT NULL CONSTRAINT ck_sla_priority CHECK (priority BETWEEN 1 AND 4),
-    first_response_mins  INT NOT NULL,
-    resolution_mins      INT NOT NULL,
-    CONSTRAINT ck_sla_scope CHECK (client_id IS NOT NULL OR support_tier IS NOT NULL)
+-- Business calendar for SLA clocks counted in business hours or days
+CREATE TABLE dbo.business_calendar (
+    calendar_id    INT IDENTITY(1,1) CONSTRAINT pk_business_calendar PRIMARY KEY,
+    name           NVARCHAR(100) NOT NULL CONSTRAINT uq_calendar_name UNIQUE,
+    time_zone      VARCHAR(64)   NOT NULL,      -- Windows zone name for AT TIME ZONE, e.g. 'Eastern Standard Time'
+    day_start      TIME(0)       NOT NULL,      -- local time
+    day_end        TIME(0)       NOT NULL,
+    open_weekdays  VARCHAR(7)    NOT NULL,      -- 1 = Monday ... 7 = Sunday, e.g. '12345'
+    CONSTRAINT ck_calendar_hours CHECK (day_end > day_start)
 );
-CREATE UNIQUE INDEX ux_sla_client   ON dbo.sla_policy (client_id, priority)    WHERE client_id IS NOT NULL;
-CREATE UNIQUE INDEX ux_sla_tier     ON dbo.sla_policy (support_tier, priority) WHERE client_id IS NULL;
+
+CREATE TABLE dbo.business_holiday (
+    calendar_id    INT NOT NULL CONSTRAINT fk_holiday_calendar REFERENCES dbo.business_calendar(calendar_id),
+    holiday_date   DATE NOT NULL,
+    name           NVARCHAR(100) NOT NULL,
+    CONSTRAINT pk_business_holiday PRIMARY KEY (calendar_id, holiday_date)
+);
+
+-- Contract SLA terms per client. The one row with client_id NULL is the Coral standard,
+-- used by every client without its own row.
+CREATE TABLE dbo.client_sla (
+    client_sla_id     INT IDENTITY(1,1) CONSTRAINT pk_client_sla PRIMARY KEY,
+    client_id         INT NULL CONSTRAINT fk_client_sla_client REFERENCES dbo.client(client_id),
+    calendar_id       INT NOT NULL CONSTRAINT fk_client_sla_calendar REFERENCES dbo.business_calendar(calendar_id),
+    customer_name     NVARCHAR(200)  NULL,      -- name on the contract, e.g. NBCUniversal
+    deployment        VARCHAR(20)    NULL CONSTRAINT ck_client_sla_deploy CHECK (deployment IN ('coral_hosted','customer_hosted')),
+    terms_basis       NVARCHAR(400)  NULL,
+    verification      VARCHAR(20)    NOT NULL CONSTRAINT ck_client_sla_verif CHECK (verification IN ('contract','assumed','unconfirmed','standard')),
+    monthly_uptime    NVARCHAR(40)   NULL,
+    support_hours     NVARCHAR(200)  NULL,
+    after_hours       NVARCHAR(400)  NULL,
+    rto               NVARCHAR(100)  NULL,
+    rpo               NVARCHAR(100)  NULL,
+    hourly_backups    NVARCHAR(200)  NULL,
+    daily_backups     NVARCHAR(200)  NULL,
+    restore_target    NVARCHAR(100)  NULL,
+    service_credits   NVARCHAR(400)  NULL,
+    special_terms     NVARCHAR(2000) NULL,
+    source_documents  NVARCHAR(1000) NULL,
+    updated_at        DATETIME2(0)   NOT NULL CONSTRAINT df_client_sla_updated DEFAULT (SYSUTCDATETIME())
+);
+CREATE UNIQUE INDEX ux_client_sla_client   ON dbo.client_sla (client_id)    WHERE client_id IS NOT NULL;
+CREATE UNIQUE INDEX ux_client_sla_standard ON dbo.client_sla (verification) WHERE client_id IS NULL;
+
+-- Response and fix targets per severity (Sev 1-4 = task priority 1-4).
+-- Units: bh business hours, bd business days, h hours around the clock, d calendar days.
+-- A fix can also be best (best efforts), prompt or next (next available update): no clock.
+CREATE TABLE dbo.sla_policy (
+    client_sla_id   INT NOT NULL CONSTRAINT fk_sla_terms REFERENCES dbo.client_sla(client_sla_id),
+    priority        TINYINT NOT NULL CONSTRAINT ck_sla_priority CHECK (priority BETWEEN 1 AND 4),
+    response_value  DECIMAL(6,1) NOT NULL CONSTRAINT ck_sla_resp_value CHECK (response_value > 0),
+    response_unit   VARCHAR(6)   NOT NULL CONSTRAINT ck_sla_resp_unit CHECK (response_unit IN ('bh','bd','h','d')),
+    response_note   NVARCHAR(200) NULL,
+    fix_value       DECIMAL(6,1) NULL,
+    fix_unit        VARCHAR(6)   NOT NULL CONSTRAINT ck_sla_fix_unit CHECK (fix_unit IN ('bh','bd','h','d','best','prompt','next')),
+    fix_note        NVARCHAR(200) NULL,
+    CONSTRAINT pk_sla_policy PRIMARY KEY (client_sla_id, priority),
+    CONSTRAINT ck_sla_fix_value CHECK ((fix_unit IN ('best','prompt','next') AND fix_value IS NULL) OR fix_value > 0)
+);
 
 CREATE TABLE dbo.task (
     task_id            INT IDENTITY(1,1) CONSTRAINT pk_task PRIMARY KEY,
@@ -89,6 +136,7 @@ CREATE TABLE dbo.task (
     first_response_at  DATETIME2(0) NULL,
     sla_paused_since   DATETIME2(0) NULL,          -- set while waiting on the client
     sla_paused_mins    INT NOT NULL CONSTRAINT df_task_paused DEFAULT (0),  -- total paused time so far
+    sla_paused_business_mins INT NOT NULL CONSTRAINT df_task_paused_biz DEFAULT (0),  -- the same, counted in business minutes
     resolved_at        DATETIME2(0) NULL,
     due_date           DATE NULL,
     external_ref       NVARCHAR(80) NULL,          -- 'Jira DEV-4410', 'Azure DevOps #8812'

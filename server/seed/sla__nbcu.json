@@ -1,0 +1,62 @@
+{
+ "client": "NBCU",
+ "label": "NBCUniversal",
+ "deployment": "Coral-hosted",
+ "basis": "Amended MSA Annex A (production)",
+ "verification": "contract",
+ "uptime": "99.8%",
+ "hours": "24/7 for Sev 1\u20132; normal business hours for Sev 3\u20134",
+ "afterHours": "24/7 for Sev 1\u20132",
+ "rto": "Not specified",
+ "rpo": "Not specified",
+ "hourlyBackups": "Not specified",
+ "dailyBackups": "Not specified",
+ "restore": "Not specified",
+ "credits": "10% / 25% / 50% by uptime band; annual cap",
+ "special": "Production SLA differs from UAT and hypercare (UAT: Sev 1 4 business hours, Sev 2 1 business day, Sev 3 2 business days, Sev 4 agreed schedule). Persistent failure allows termination. The credit bands overlap in the source; legal review advised.",
+ "source": "NBCU Master Agreement Amendment_1.pdf; NBCU MSA",
+ "sev": {
+  "1": {
+   "resp": {
+    "n": 1,
+    "u": "h"
+   },
+   "fix": {
+    "u": "best",
+    "note": "Continuous work, no fixed deadline"
+   }
+  },
+  "2": {
+   "resp": {
+    "n": 4,
+    "u": "h"
+   },
+   "fix": {
+    "u": "best",
+    "note": "Continuous work, no fixed deadline"
+   }
+  },
+  "3": {
+   "resp": {
+    "n": 6,
+    "u": "bh"
+   },
+   "fix": {
+    "u": "prompt",
+    "note": "During normal business hours"
+   }
+  },
+  "4": {
+   "resp": {
+    "n": 8,
+    "u": "bh",
+    "note": "Business-hours condition"
+   },
+   "fix": {
+    "n": 2,
+    "u": "bd",
+    "note": "Promptly; investigate or design within 2 business days"
+   }
+  }
+ }
+}

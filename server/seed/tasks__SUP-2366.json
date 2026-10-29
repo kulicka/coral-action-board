@@ -9,8 +9,8 @@
  "owner": "JR",
  "queue": "Support L1",
  "stage": 2,
- "createdAt": "2026-10-27T21:21:42Z",
- "firstResponseAt": "2026-10-28T00:41:42Z",
+ "createdAt": "2026-10-27T22:23:32Z",
+ "firstResponseAt": "2026-10-28T01:43:32Z",
  "pausedSince": null,
  "pausedMins": 0,
  "resolvedAt": null,
@@ -24,21 +24,21 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-27T21:21:42Z",
+   "at": "2026-10-27T22:23:32Z",
    "text": "Created from email"
   },
   {
-   "at": "2026-10-27T21:51:42Z",
+   "at": "2026-10-27T22:53:32Z",
    "text": "Assigned to Jon Ruiz"
   },
   {
-   "at": "2026-10-28T00:41:42Z",
+   "at": "2026-10-28T01:43:32Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-28T11:01:42Z",
+   "at": "2026-10-28T12:03:32Z",
    "text": "Jon drafted a reply"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

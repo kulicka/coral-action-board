@@ -9,7 +9,7 @@
  "owner": "LP",
  "queue": "QA",
  "stage": 5,
- "createdAt": "2026-10-25T19:21:42Z",
+ "createdAt": "2026-10-25T20:23:32Z",
  "firstResponseAt": null,
  "pausedSince": null,
  "pausedMins": 0,
@@ -24,17 +24,17 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-25T19:21:42Z",
+   "at": "2026-10-25T20:23:32Z",
    "text": "Created from Jira"
   },
   {
-   "at": "2026-10-25T19:51:42Z",
+   "at": "2026-10-25T20:53:32Z",
    "text": "Assigned to Lena Park"
   },
   {
-   "at": "2026-10-28T11:01:42Z",
+   "at": "2026-10-28T12:03:32Z",
    "text": "Passed testing, waiting for the 4.12 release"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }

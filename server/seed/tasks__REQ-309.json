@@ -9,8 +9,8 @@
  "owner": "HS",
  "queue": "Support L1",
  "stage": 2,
- "createdAt": "2026-10-24T16:41:42Z",
- "firstResponseAt": "2026-10-24T21:41:42Z",
+ "createdAt": "2026-10-24T17:43:32Z",
+ "firstResponseAt": "2026-10-24T22:43:32Z",
  "pausedSince": null,
  "pausedMins": 0,
  "resolvedAt": null,
@@ -24,21 +24,21 @@
  "notes": "",
  "history": [
   {
-   "at": "2026-10-24T16:41:42Z",
+   "at": "2026-10-24T17:43:32Z",
    "text": "Created from support portal"
   },
   {
-   "at": "2026-10-24T17:11:42Z",
+   "at": "2026-10-24T18:13:32Z",
    "text": "Assigned to Hana Sato"
   },
   {
-   "at": "2026-10-24T21:41:42Z",
+   "at": "2026-10-24T22:43:32Z",
    "text": "First response sent"
   },
   {
-   "at": "2026-10-28T11:01:42Z",
+   "at": "2026-10-28T12:03:32Z",
    "text": "Waiting on security sign-off"
   }
  ],
- "updatedAt": "2026-10-28T14:01:42Z"
+ "updatedAt": "2026-10-28T15:03:32Z"
 }
