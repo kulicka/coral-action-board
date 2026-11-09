@@ -4,4 +4,4 @@ sql
 tools
 data
 *.md
-fly.toml
+fly*.toml

@@ -29,9 +29,66 @@ BOARD_PASSWORD=secret node --experimental-sqlite server/server.js
 # open http://localhost:8080 and sign in as coral / secret
 ```
 
+The server refuses to start without some form of sign-in. For a quick look with no sign-in at all, set `ALLOW_NO_AUTH=1`.
+
+## Sign-in and security
+
+The board can hold personal or client information, so every page and API call needs sign-in. Only `/healthz` is open.
+
+**Google sign-in (recommended).** Set `GOOGLE_CLIENT_ID` and the board uses Google sign-in, limited to the accounts you allow:
+
+- `ALLOWED_EMAILS`: comma-separated Google accounts, for example `someone@gmail.com`.
+- `ALLOWED_DOMAINS`: comma-separated Google Workspace domains, for example `coral.team`. This matches only Workspace accounts of that domain (Google's `hd` claim), not any Google account that uses an address there.
+
+Set up the Google client once per deployment:
+
+1. In Google Cloud Console, open **APIs & Services → OAuth consent screen**. Choose **External** (or **Internal** for a Workspace-only board), fill in the app name and your email, and add yourself as a test user. Testing mode is fine for a few people.
+2. Open **Credentials → Create credentials → OAuth client ID**, type **Web application**. Add the authorized redirect URI `https://<app-name>.fly.dev/auth/callback`.
+3. Set the secrets (never commit them):
+
+   ```sh
+   fly secrets set -a <app-name> \
+     GOOGLE_CLIENT_ID='<client id>' \
+     GOOGLE_CLIENT_SECRET='<client secret>' \
+     SESSION_SECRET="$(openssl rand -hex 32)" \
+     ALLOWED_EMAILS='<your account>@gmail.com'
+   ```
+
+   `PUBLIC_URL` (the board's https address) must also be set, as an env value in the fly config or as a secret.
+
+Sessions last `SESSION_HOURS` (12 by default) in a signed, HttpOnly cookie. Removing an account from the allow list locks it out on the next restart. Changing `SESSION_SECRET` signs everyone out.
+
+**Shared password (legacy).** Without `GOOGLE_CLIENT_ID`, `BOARD_PASSWORD` turns on one shared password (HTTP basic auth, user `BOARD_USER`, default `coral`).
+
+**What else the server does:**
+
+- Strict security headers: a Content-Security-Policy that only runs the board's own scripts (per-request nonce), HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, `noindex`.
+- Writes from the browser must come from the board's own origin and be JSON, which blocks cross-site request forgery.
+- 30 failed sign-ins from one IP in 10 minutes blocks that IP for the rest of the 10 minutes.
+- Secrets come only from environment variables. Nothing personal belongs in this repo: seed files and SQL here are test data only.
+
+## Adding tasks from another system (ingest token)
+
+Set `BOARD_INGEST_TOKEN` (32+ characters, `openssl rand -hex 32`) to let a script or scheduled job add tasks without signing in to Google. The token can only `PUT` or `PATCH` `/api/tasks/<id>`. It can't read, list, delete, or touch other collections.
+
+```sh
+# create (If-None-Match: * returns 412 if the task already exists, so a repeat run won't overwrite edits)
+curl -X PUT https://<app-name>.fly.dev/api/tasks/PER-18c2f0a1 \
+  -H "Authorization: Bearer $BOARD_INGEST_TOKEN" -H 'Content-Type: application/json' -H 'If-None-Match: *' \
+  -d '{"key":"PER-18c2f0a1","type":"request","source":"email","title":"Pay the electric bill","client":"Bills",
+       "project":null,"priority":2,"owner":null,"queue":"Personal","stage":0,"createdAt":"2026-11-09T14:00:00Z",
+       "due":"2026-11-20","tags":["bill"],"notes":"","history":[{"at":"2026-11-09T14:00:00Z","text":"Created from email"}]}'
+
+# update some fields (merged into the existing task)
+curl -X PATCH https://<app-name>.fly.dev/api/tasks/PER-18c2f0a1 \
+  -H "Authorization: Bearer $BOARD_INGEST_TOKEN" -H 'Content-Type: application/json' -d '{"due":"2026-11-21"}'
+```
+
+Tasks written with the token are checked before they're saved: `key` must equal the id and look like `ABC-123`; required fields are `key`, `type`, `title`, `client`, `priority` (1–4), `queue`, `stage` (0–6) and `createdAt`; times are UTC ISO 8601 (`2026-11-09T14:00:00Z`), `due` is `YYYY-MM-DD`, and unknown fields are refused. A bad task gets a 400 that names the fields.
+
 ## Deploy to Fly.io
 
-The container is a Node 22 server with no dependencies. It stores the board in SQLite on a Fly volume and loads the test data the first time it starts.
+The container is a Node 22 server with no dependencies. It stores the board in SQLite on a Fly volume.
 
 1. In `fly.toml`, set `app` to a free name and `primary_region` to the region your other apps use.
 2. Run these once:
@@ -39,20 +96,34 @@ The container is a Node 22 server with no dependencies. It stores the board in S
    ```sh
    fly apps create <app-name>
    fly volumes create board_data --size 1 --region <region> -a <app-name>
-   fly secrets set BOARD_PASSWORD='<shared password>' -a <app-name>
+   # then the Google secrets above, plus PUBLIC_URL
    fly deploy
    ```
-3. Open `https://<app-name>.fly.dev` and sign in as `coral` with that password. Set `BOARD_USER` as a secret to change the user name.
+3. Open `https://<app-name>.fly.dev` and sign in with an allowed Google account.
 
 Later deploys are just `fly deploy`. The data stays on the volume.
 
+### A separate personal board
+
+`fly.personal.toml` runs a second, private copy of the board with its own app, volume and secrets. It starts empty (`SEED=personal`: a few personal categories as clients, one "Personal" queue, no Coral test data).
+
+```sh
+fly apps create kulicka-personal-board
+fly volumes create personal_board_data --size 1 --region iad -a kulicka-personal-board
+fly secrets set -a kulicka-personal-board GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... \
+  SESSION_SECRET="$(openssl rand -hex 32)" ALLOWED_EMAILS='<personal account>@gmail.com' \
+  BOARD_INGEST_TOKEN="$(openssl rand -hex 32)"
+fly deploy -c fly.personal.toml
+```
+
+Give it its own Google OAuth client (or add `https://kulicka-personal-board.fly.dev/auth/callback` as a second redirect URI on the same client).
+
 Notes:
 - Run **one machine only**, because SQLite lives on a single volume. Don't `fly scale count 2`. The machine stops when idle and starts again on the next request.
-- To start with an empty board instead of test data, `fly secrets set SEED=off` before the first deploy. To reload the test data, delete `/data/board.db` (`fly ssh console`) and restart.
+- `SEED`: unset loads the Coral test data the first time the board starts, `personal` starts an empty personal board, `off` loads nothing. To reload, delete `/data/board.db` (`fly ssh console`) and restart.
 - Back up with `fly ssh sftp get /data/board.db`. Fly also snapshots volumes daily.
-- Sign-in is one shared password (HTTP basic auth). Use the "Working as" picker to choose who you act as. Per-person sign-in (for example Microsoft Entra ID) comes later.
-- `/healthz` is open for Fly's health check. Everything else needs the password.
-- Configuration: `PORT` (8080), `DB_PATH` (`/data/board.db`), `BOARD_USER` (`coral`), `BOARD_PASSWORD` (no password if unset), `SEED` (`off` to skip test data).
+- The "Working as" picker still chooses who you act as; it isn't tied to the Google account yet.
+- Configuration: `PORT` (8080), `DB_PATH` (`/data/board.db`), `PUBLIC_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `SESSION_HOURS` (12), `ALLOWED_EMAILS`, `ALLOWED_DOMAINS`, `BOARD_INGEST_TOKEN`, `BOARD_USER` / `BOARD_PASSWORD` (legacy), `SEED`, `ALLOW_NO_AUTH` (local only).
 
 ## Setting up the database
 
@@ -76,7 +147,7 @@ SELECT * FROM dbo.v_needs_attention ORDER BY sla_state, priority;
 
 ## Planned
 
-- Integrations: Jira, Azure DevOps, Microsoft Teams, email intake.
+- Integrations: Jira, Azure DevOps, Microsoft Teams. (Email intake can use the ingest token.)
 - Time tracking: a timer starts when someone takes a task, and Stop posts the time to the time tracker.
 - Real sign-in in place of the "Working as" picker.
 - A business-hours calendar for SLA clocks.
