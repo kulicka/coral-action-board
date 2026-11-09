@@ -8,13 +8,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
+const auth = require('./auth');
+auth.checkConfig();
 
 const PORT = Number(process.env.PORT || 8080);
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'board.db');
 const APP_HTML = process.env.APP_HTML || path.join(__dirname, '..', 'app', 'index.html');
-const SEED_DIR = path.join(__dirname, 'seed');
-const BOARD_USER = process.env.BOARD_USER || 'coral';
-const BOARD_PASSWORD = process.env.BOARD_PASSWORD || '';
+// SEED: unset loads the Coral test data, 'personal' starts an empty personal board, 'off' loads nothing.
+const SEED = process.env.SEED || 'coral';
+const SEED_DIR = path.join(__dirname, SEED === 'personal' ? 'seed-personal' : 'seed');
 const COLLECTIONS = new Set(['tasks', 'people', 'views', 'config', 'sla']);
 const SEGMENT = /^[A-Za-z0-9_\-.~:@+]{1,200}$/;
 const MAX_BODY = 256 * 1024;
@@ -57,7 +59,7 @@ function writeDoc(coll, id, data) {
 // Seed files were generated at one moment (config.settings.seededAt); shift every
 // timestamp forward so the SLA clocks look the same as when they were generated.
 function seedIfEmpty() {
-  if (process.env.SEED === 'off' || q.count.get().n > 0 || !fs.existsSync(SEED_DIR)) return;
+  if (SEED === 'off' || q.count.get().n > 0 || !fs.existsSync(SEED_DIR)) return;
   const files = fs.readdirSync(SEED_DIR).filter(f => /^[a-z]+__[^/]+\.json$/.test(f));
   const settings = files.includes('config__settings.json')
     ? JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'config__settings.json'), 'utf8')) : {};
@@ -109,7 +111,7 @@ migrateStages();
 // deploys. Load them from the seed files once, and add any of their clients to the client list.
 function addSlaTerms() {
   const cfg = readDoc('config', 'settings');
-  if (!cfg || q.list.all('sla').length || !fs.existsSync(SEED_DIR)) return;
+  if (SEED !== 'coral' || !cfg || q.list.all('sla').length || !fs.existsSync(SEED_DIR)) return;
   const files = fs.readdirSync(SEED_DIR).filter(f => /^sla__[^/]+\.json$/.test(f));
   const seedCfg = JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'config__settings.json'), 'utf8'));
   db.exec('BEGIN');
@@ -145,6 +147,7 @@ function merge(base, patch) {
   return out;
 }
 function send(res, status, body, type = 'application/json') {
+  if (!res.hasHeader('Content-Security-Policy')) auth.securityHeaders(res);
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
   res.end(type === 'application/json' ? JSON.stringify(body) : body);
 }
@@ -160,32 +163,80 @@ function readBody(req) {
     req.on('error', reject);
   });
 }
-function authorized(req) {
-  if (!BOARD_PASSWORD) return true;
-  const m = /^Basic (.+)$/.exec(req.headers.authorization || '');
-  if (!m) return false;
-  const [user, ...rest] = Buffer.from(m[1], 'base64').toString('utf8').split(':');
-  const a = crypto.createHash('sha256').update(`${user}:${rest.join(':')}`).digest();
-  const b = crypto.createHash('sha256').update(`${BOARD_USER}:${BOARD_PASSWORD}`).digest();
-  return crypto.timingSafeEqual(a, b);
-}
 
 const RESET_CSS = ':root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}';
-function pageHtml() {
-  const app = fs.readFileSync(APP_HTML, 'utf8').replace('<script>', '<script src="/runtime.js"></script>\n<script>');
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${RESET_CSS}</style></head><body>${app}</body></html>`;
+const SIGN_OUT = auth.MODE === 'google'
+  ? '<form method="post" action="/auth/logout" style="position:fixed;right:10px;bottom:10px;z-index:50;margin:0"><button type="submit" style="font:12px system-ui,sans-serif;padding:4px 10px;border-radius:6px;border:1px solid #8886;background:transparent;color:inherit;opacity:.7;cursor:pointer">Sign out</button></form>'
+  : '';
+function pageHtml(nonce) {
+  const app = fs.readFileSync(APP_HTML, 'utf8').replace('<script>', `<script nonce="${nonce}" src="/runtime.js"></script>\n<script nonce="${nonce}">`);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><title>Action Board</title><style>${RESET_CSS}</style></head><body>${app}${SIGN_OUT}</body></html>`;
+}
+
+// Tasks written with the ingest token come from outside (for example from email), so check
+// their shape: the page renders some of these fields as HTML.
+const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d(\.\d+)?)?Z$/;
+const DAY = /^\d{4}-\d\d-\d\d$/;
+const TASK_FIELDS = {
+  key: v => typeof v === 'string' && /^[A-Z][A-Z0-9]{0,9}-[A-Za-z0-9_-]{1,80}$/.test(v),
+  type: v => ['incident', 'bug', 'request', 'question', 'internal', 'feature', 'change'].includes(v),
+  source: v => typeof v === 'string' && /^[a-z]{1,20}$/.test(v),
+  title: v => typeof v === 'string' && v.length >= 1 && v.length <= 300,
+  client: v => typeof v === 'string' && v.length <= 80,
+  project: v => v === null || (typeof v === 'string' && v.length <= 120),
+  priority: v => Number.isInteger(v) && v >= 1 && v <= 4,
+  owner: v => v === null || (typeof v === 'string' && /^[A-Za-z0-9_-]{1,20}$/.test(v)),
+  queue: v => typeof v === 'string' && v.length <= 80,
+  stage: v => Number.isInteger(v) && v >= 0 && v <= 6,
+  createdAt: v => typeof v === 'string' && ISO.test(v),
+  updatedAt: v => typeof v === 'string' && ISO.test(v),
+  firstResponseAt: v => v === null || (typeof v === 'string' && ISO.test(v)),
+  pausedSince: v => v === null || (typeof v === 'string' && ISO.test(v)),
+  resolvedAt: v => v === null || (typeof v === 'string' && ISO.test(v)),
+  pausedMins: v => Number.isInteger(v) && v >= 0,
+  due: v => v === null || (typeof v === 'string' && DAY.test(v)),
+  module: v => v === null || (typeof v === 'string' && v.length <= 60),
+  release: v => v === null || (typeof v === 'string' && /^[A-Za-z0-9 ._-]{1,40}$/.test(v)),
+  link: v => v === null || (typeof v === 'string' && v.length <= 500),
+  tags: v => Array.isArray(v) && v.length <= 20 && v.every(t => typeof t === 'string' && t.length <= 40),
+  notes: v => typeof v === 'string' && v.length <= 20000,
+  history: v => Array.isArray(v) && v.length <= 200 && v.every(h => isPlainObject(h) && typeof h.text === 'string' && h.text.length <= 500 && typeof h.at === 'string' && ISO.test(h.at) && Object.keys(h).every(k => k === 'at' || k === 'text')),
+};
+const REQUIRED_TASK_FIELDS = ['key', 'type', 'title', 'client', 'priority', 'queue', 'stage', 'createdAt'];
+function checkIngestTask(id, doc) {
+  const bad = Object.keys(doc).filter(k => !TASK_FIELDS[k] || !TASK_FIELDS[k](doc[k]));
+  const missing = REQUIRED_TASK_FIELDS.filter(k => !(k in doc));
+  if (doc.key !== id) bad.push('key (must equal the document id)');
+  if (bad.length || missing.length) {
+    throw Object.assign(new Error(`Invalid task.${bad.length ? ' Bad fields: ' + bad.join(', ') + '.' : ''}${missing.length ? ' Missing: ' + missing.join(', ') + '.' : ''}`), { status: 400 });
+  }
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
   if (p === '/healthz') return send(res, 200, 'ok', 'text/plain');
-  if (!authorized(req)) {
-    res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Coral MSP Action Board", charset="UTF-8"' });
-    return res.end('Sign in required');
-  }
+  if (auth.limited(req)) return fail(res, 429, 'resource_exhausted', 'Too many failed sign-ins. Try again later.');
+  const who = auth.identify(req);
   try {
-    if (req.method === 'GET' && (p === '/' || p === '/index.html')) return send(res, 200, pageHtml(), 'text/html; charset=utf-8');
+    if (await auth.handleAuthRoute(req, res, url, who)) return;
+    if (!who) {
+      if (req.headers.authorization) auth.noteFail(req);
+      return auth.challenge(req, res, url);
+    }
+    const write = !['GET', 'HEAD'].includes(req.method);
+    if (who.kind === 'ingest') {
+      // The ingest token may only create or update tasks, one document at a time.
+      if (!/^\/api\/tasks\/[^/]+$/.test(p) || !['PUT', 'PATCH'].includes(req.method)) return fail(res, 403, 'permission_denied', 'The ingest token can only PUT or PATCH /api/tasks/<id>');
+    } else if (write) {
+      if (!auth.sameOrigin(req)) return fail(res, 403, 'permission_denied', 'Cross-site request refused');
+      if (['PUT', 'PATCH'].includes(req.method) && !/^application\/json\b/i.test(req.headers['content-type'] || '')) return fail(res, 415, 'invalid_argument', 'Content-Type must be application/json');
+    }
+    if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
+      const nonce = crypto.randomBytes(16).toString('base64');
+      auth.securityHeaders(res, nonce);
+      return send(res, 200, pageHtml(nonce), 'text/html; charset=utf-8');
+    }
     if (req.method === 'GET' && p === '/runtime.js') return send(res, 200, fs.readFileSync(path.join(__dirname, 'runtime.js')), 'text/javascript; charset=utf-8');
     if (req.method === 'GET' && p === '/api/events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -203,11 +254,19 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, q.list.all(coll).map(r => ({ id: r.id, data: JSON.parse(r.data), version: r.version })));
     }
     if (req.method === 'GET') { const d = readDoc(coll, id); return d ? send(res, 200, { id, ...d }) : fail(res, 404, 'not_found', 'No such document'); }
-    if (req.method === 'PUT') return send(res, 200, { id, ...writeDoc(coll, id, await readBody(req)) });
+    if (req.method === 'PUT') {
+      const body = await readBody(req);
+      // "If-None-Match: *" makes a PUT create-only, so a repeat delivery can't overwrite edits.
+      if (req.headers['if-none-match'] === '*' && readDoc(coll, id)) return fail(res, 412, 'already_exists', 'Document already exists');
+      if (who.kind === 'ingest') checkIngestTask(id, body);
+      return send(res, 200, { id, ...writeDoc(coll, id, body) });
+    }
     if (req.method === 'PATCH') {
       const cur = readDoc(coll, id);
       if (!cur) return fail(res, 400, 'invalid_argument', 'Document does not exist');
-      return send(res, 200, { id, ...writeDoc(coll, id, merge(cur.data, await readBody(req))) });
+      const next = merge(cur.data, await readBody(req));
+      if (who.kind === 'ingest') checkIngestTask(id, next);
+      return send(res, 200, { id, ...writeDoc(coll, id, next) });
     }
     if (req.method === 'DELETE') { q.del.run(coll, id); broadcast({ coll, id, data: null }); return send(res, 200, { id, deleted: true }); }
     return fail(res, 405, 'invalid_argument', 'Method not allowed');
@@ -218,5 +277,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Action board on :${PORT} (db ${DB_PATH}${BOARD_PASSWORD ? ', password on' : ', NO PASSWORD'})`));
+server.listen(PORT, () => console.log(`Action board on :${PORT} (db ${DB_PATH}, sign-in: ${auth.MODE}${auth.INGEST_TOKEN ? ', ingest token on' : ''})`));
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { server.close(); db.close(); process.exit(0); });
