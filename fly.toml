@@ -11,6 +11,7 @@ primary_region = 'iad'
 [env]
   DB_PATH = '/data/board.db'
   PORT = '8080'
+  PUBLIC_URL = 'https://coral-action-board.fly.dev'
 
 [[mounts]]
   source = 'board_data'
